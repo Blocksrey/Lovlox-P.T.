@@ -272,7 +272,7 @@ love.update:Connect(function(dt)
 	pos = pos + dt*mul*vel
 end)
 
-local testmodel = require("test model")
+local testmodel = require("models/pt")
 for i = 1, #testmodel do
 	local color = testmodel[i][4]
 	meshes[i] = newbox(16, color.x, color.y, color.z)
