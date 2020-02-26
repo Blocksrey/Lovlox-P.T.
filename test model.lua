@@ -1,5 +1,5 @@
-local vec3 = require("vec3")
-local mat3 = require("mat3")
+local vec3 = require("algebra/vec3")
+local mat3 = require("algebra/mat3")
 
 return {
   {vec3.new(0, -10, 0), mat3.new(1, 0, 0, 0, 1, 0, 0, 0, 1), vec3.new(512, 20, 512), vec3.new(0.38823530077934, 0.37254902720451, 0.38431373238564)},

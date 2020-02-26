@@ -1,20 +1,31 @@
-require("rover")
+require("lovloxhandler")
 
-local rove = require("Rove/Main")
-local mat3 = require("mat3")
-local vec3 = require("vec3")
-local quat = require("quat")
-local rand = require("random")
-local light = require("light")
+local rove   = require("lovlox/Main")
+local mat3   = require("algebra/mat3")
+local vec3   = require("algebra/vec3")
+local quat   = require("algebra/quat")
+local rand   = require("random")
+local light  = require("light")
 local object = require("object")
+local Signal = require("lovlox/Signal")
 
 --load in the geometry shader and compositing shader
-local geomshader = love.graphics.newShader("geom_pixel_shader.glsl", "geom_vertex_shader.glsl")
-local lightshader = love.graphics.newShader("light_pixel_shader.glsl", "light_vertex_shader.glsl")
-local compshader = love.graphics.newShader("comp_pixel_shader.glsl")
-local debandshader = love.graphics.newShader("deband_pixel_shader.glsl")
+local geomshader = love.graphics.newShader("shaders/geom_pixel_shader.glsl", "shaders/geom_vertex_shader.glsl")
+local lightshader = love.graphics.newShader("shaders/light_pixel_shader.glsl", "shaders/light_vertex_shader.glsl")
+local compshader = love.graphics.newShader("shaders/comp_pixel_shader.glsl")
+local debandshader = love.graphics.newShader("shaders/deband_pixel_shader.glsl")
 
 local randomsampler = rand.newsampler(256, 256, rand.triangular4)
+
+--make signals
+love.mousefocus = Signal.new()
+love.focus      = Signal.new()
+love.keypressed = Signal.new()
+love.wheelmoved = Signal.new()
+love.mousemoved = Signal.new()
+love.update     = Signal.new()
+love.draw       = Signal.new()
+love.resize     = Signal.new()
 
 --make the buffers
 local geombuffer
@@ -50,11 +61,28 @@ local function makebuffers()
 end
 
 makebuffers()
+love.resize:Connect(makebuffers)
 
-function love.resize()
-	makebuffers()
-end
+local mousefocused = false
+local focused      = false
 
+
+love.mousefocus:Connect(function(f)
+	mousefocused = f
+end)
+
+love.focus:Connect(function(f)
+	focused = f
+end)
+
+--love.mousefocus = Signal.new()
+
+--[[
+love.mousefocus:Connect(function(...)
+	print(...)
+end)
+
+]]
 love.window.setMode(800, 600, {resizable = true; fullscreen = false;})
 
 --this will allow us to compute the frustum transformation matrix once,
@@ -97,9 +125,9 @@ local newlight = light.new
 
 local wut = 1
 local shadow = 0
-local function drawmeshes(ratio, height, near, far, pos, rot, meshes, lights)
-	local frusT = getfrusT(ratio, height, near, far, pos, rot)
+local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	local w, h = love.graphics.getDimensions()
+	local frusT = getfrusT(w/h, height, near, far, pos, rot)
 	love.graphics.push("all")
 	love.graphics.reset()
 
@@ -192,8 +220,6 @@ end
 
 
 
-
-
 local meshes = {}
 local lights = {}
 
@@ -205,18 +231,21 @@ local angx = 0
 local sens = 1/256
 local speed = 8
 
-function love.keypressed(k)
+love.keypressed:Connect(function(k)
 	if k == "escape" then
 		love.event.quit()
 	elseif k == "r" then
 		wut = 1 - wut
 	elseif k == "t" then
 		shadow = 1 - shadow
+	elseif k == "f11" then
+		love.window.setFullscreen(not love.window.getFullscreen())
 	end
-end
+end)
+
 
 local yoooo = -48
-function love.wheelmoved(x, y)
+love.wheelmoved:Connect(function(x, y)
 	if y > 0 then
 		yoooo = yoooo - 1
 	elseif y < 0 then
@@ -225,7 +254,7 @@ function love.wheelmoved(x, y)
 	for i = 1, #lights do
 		lights[i].setalpha(2^(yoooo/8))
 	end
-end
+end)
 
 local function clamp(p, a, b)
 	return p < a and a or p > b and b or p
@@ -234,15 +263,15 @@ end
 
 local pi = math.pi
 
-function love.mousemoved(px, py, dx, dy)
+love.mousemoved:Connect(function(px, py, dx, dy)
 	angy = angy + sens*dx
 	angx = angx + sens*dy
 	angx = clamp(angx, -pi/2, pi/2)
-end
+end)
 
-function love.update(dt)
-	love.mouse.setRelativeMode(not love.keyboard.isDown("tab"))
-
+love.update:Connect(function(dt)
+	love.mouse.setRelativeMode(focused and mousefocused)
+	
 	local mul = speed
 	if love.keyboard.isDown("lshift") then
 		mul = 8*mul
@@ -262,65 +291,7 @@ function love.update(dt)
 
 	local vel = rot*vec3.new(keyd - keya, keye - keyq, keyw - keys):unit()
 	pos = pos + dt*mul*vel
-end
-
-
-
---meshes[2] = newlightico()
-
---[[
-meshes[1] = newsphere(8, 1, 1, 1)
-meshes[2] = newsphere(8, 1, 1, 1)
-
-meshes[1].setscale(vec3.new(0.25, 0.25, 0.25))
-meshes[1].setpos(vec3.new(0, 0, 0))
-meshes[2].setpos(vec3.new(2, 0, 0))
-
-lights[1] = newlight()
-lights[1].setpos(vec3.new(-3, 0, 0))
-lights[1].setcolor(vec3.new(10, 10, 10))
---]]
-
---[[
-for i = 1, 50 do
-	meshes[i] = newsphere(8, 1, 1, 1)--1280 tris per sphere
-	meshes[i].setpos(vec3.new(
-		(math.random() - 1/2)*10,
-		(math.random() - 1/2)*10,
-		(math.random() - 1/2)*10
-	))
-	meshes[i].setrot(mat3.random())
-end
-for i = 51, 100 do
-	meshes[i] = newtet(1, 1, 1)
-	meshes[i].setpos(vec3.new(
-		(math.random() - 1/2)*10,
-		(math.random() - 1/2)*10,
-		(math.random() - 1/2)*10
-	))
-	meshes[i].setrot(mat3.random())
-end
-
-for i = 1, 10 do
-	lights[i] = newlight()
-	lights[i].setpos(vec3.new(
-		(math.random() - 1/2)*100,
-		25--(math.random() - 1/2)*10,
-		(math.random() - 1/2)*100
-	))
-	lights[i].setcolor(vec3.new(
-		math.random()*100,
-		math.random()*100,
-		math.random()*100
-	))
-	lights[i].setalpha(1/64)
-end
-
-meshes[1] = newbox(1, 1, 1)
-meshes[1].setpos(vec3.new(0, -10, 0))
-meshes[1].setscale(vec3.new(40, 1, 40))
-
---]]
+end)
 
 local testmodel = require("test model")
 for i = 1, #testmodel do
@@ -351,41 +322,129 @@ end
 
 
 
-local lastt = love.timer.getTime()
-function love.draw()
-	rove.render(meshes)
 
-	local w, h = love.graphics.getDimensions()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--[[
+
+--main_rigidbody
+game:GetService("ReplicatedFirst"):RemoveDefaultLoadingScreen()
+
+--modules
+local rigidbody = require("rigidbody")
+local interval  = require("interval")
+
+--localized
+local v3       = Vector3.new
+local cf       = CFrame.new
+local instance = Instance.new
+
+--stuff
+local part      = instance("Part", workspace)
+part.Anchored   = true
+part.CanCollide = false
+
+local px, py, pz = 0, 0, 0
+local sx, sy, sz = 2, 1, 4
+local mass       = 1
+
+local function rectmoment(px, py, pz, sx, sy, sz, m)
+	return cf(
+		0, 0, 0,
+		 m*(py*py + pz*pz + 1/12*(sy*sy + sz*sz)),
+		-m* py*px,
+		-m* pz*px,
+		-m* px*py,
+		 m*(pz*pz + px*px + 1/12*(sz*sz + sx*sx)),
+		-m* pz*py,
+		-m* px*pz,
+		-m* py*pz,
+		 m*(px*px + py*py + 1/12*(sx*sx + sy*sy))
+  )
+end
+
+local rigidbody0 = rigidbody.new({
+	t     = tick();
+	x     = v3(0, 4, 0);
+	omega = v3(2, 0.1, -0.1);
+	m     = mass;
+	I     = rectmoment(px, py, pz, sx, sy, sz, mass);
+})
+
+local function updatephysics(t)
+	rigidbody.update(rigidbody0, t)	
+end
+
+--sub-frame physics stepping (for accuracy)
+local physicsinterval = interval.new({
+	t = tick();
+	i = 2^-10;
+	f = updatephysics;
+})
+
+local head = game:GetService("Players").LocalPlayer.Character:WaitForChild("Head")
+
+game:GetService("RunService").RenderStepped:Connect(function()
+	local t1 = tick()
+	--sub-frame update
+	interval.update(physicsinterval, t1)
+	--current frame update
+	rigidbody.update(rigidbody0, t1)
+	--render
+	part.Size   = v3(sx, sy, sz)
+	part.CFrame = rigidbody0.o*cf(px, py, pz) + rigidbody0.x
+end)
+
+return nil
+
+
+]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local lastt = love.timer.getTime()
+
+
+love.draw:Connect(function()
+	rove.render(meshes)
 
 	local t = love.timer.getTime()--tick()
 	local dt = t - lastt
 	local rot = mat3.fromeuleryxz(angy, angx, 0)
-
-	--meshes[1].setrot(mat3.fromeuleryxz(t, 0, 0))
-
-	--[[for i = 1, #meshes do
-		meshes[i].setscale(vec3.new(
-			rand.uniform3()
-		))
-		--meshes[i].setrot(mat3.fromquat(quat.random()))
-	end]]
-
-	--[=[
-	for i = 1, #lights do
-		local l = lights[i]
-		local pos = l.getpos()
-		--local t = (t + i)/10
-		--[[if 20 < pos.x then
-			pos = pos - vec3.new(40, 0, 0)
-			pos.y = math.random()*30 - 15
-			pos.z = math.random()*30 - 15
-		end
-		pos = pos + vec3.new(100*dt, 0, 0)
-		l.setpos(pos)]]
-		l.setpos(15*vec3.new(math.cos(t + i), 1, math.sin(t + i)))
-		--l.setpos(15*vec3.new(math.cos(t + i), math.cos(1.618*t + i), math.cos(2.618*t + i)))
-	end
-	--]=]
 
 	for i = 1, 1 do
 		local tpos = pos + rot*vec3.new(0, 0, 10)
@@ -395,7 +454,7 @@ function love.draw()
 		lights[i].setcolor(vec3.new(5, 5, 5))
 	end
 
-	drawmeshes(w/h, 1, near, far, pos, rot, meshes, lights)
+	drawmeshes(1, near, far, pos, rot, meshes, lights)
 	--love.graphics.print((love.timer.getTime() - t)*1000)
 	love.graphics.print(
 		"debanding enabled: "..wut..
@@ -404,7 +463,5 @@ function love.draw()
 		--select(2, lights[1].getdrawdata())[1]
 	)
 	--love.graphics.print(love.timer.getFPS())
-
-	love.window.setTitle(love.timer.getFPS())
 	lastt = t
-end
+end)

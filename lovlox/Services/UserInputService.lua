@@ -1,5 +1,5 @@
-local game   = require("Rove/Game")
-local Signal = require("Rove/Signal")
+local game   = require("lovlox/game")
+local Signal = require("lovlox/Signal")
 
 local meta = {}
 meta.__index = meta

@@ -1,4 +1,4 @@
-local Enum = require("Rove/Enum")
+local Enum = require("lovlox/Enum")
 
 local Material = {}
 

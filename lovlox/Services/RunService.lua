@@ -1,6 +1,5 @@
-local game = require("Rove/Game")
-
-local signal = require("Rove/Signal")
+local game   = require("lovlox/game")
+local signal = require("lovlox/Signal")
 
 local RunService = {}
 

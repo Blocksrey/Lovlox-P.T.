@@ -1,8 +1,8 @@
 local object = {}
 
 local vertdefs = require("vertdefs")
-local vec3 = require("vec3")
-local mat3 = require("mat3")
+local vec3 = require("algebra/vec3")
+local mat3 = require("algebra/mat3")
 
 --returns a 4x4 transformation matrix to be passed to the vertex shader
 local function computetransforms(vertT, normT, pos, rot, scale)

@@ -1,4 +1,4 @@
-local Signal = require("Rove/Signal")
+local Signal = require("lovlox/Signal")
 
 local meta = {}
 meta.__index = meta

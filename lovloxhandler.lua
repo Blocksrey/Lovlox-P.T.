@@ -1,7 +1,7 @@
-require("Rove/Main")
+require("lovlox/main")
 
 function _G.load(name)
-	local find = require("Game/client/"..name)
+	local find = require("game/"..name)
 	if find then
 		print("load: "..name)
 		return find
@@ -11,4 +11,4 @@ function _G.load(name)
 	end
 end
 
-require("Game/client/thebow")
+require("game/main")

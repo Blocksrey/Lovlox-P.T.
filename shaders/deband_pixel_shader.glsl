@@ -40,6 +40,7 @@ void effect(){
 	//if (i == 1) mappedcolor = whatever(basecolor);
 	//if (i == 3) mappedcolor = basecolor;
 	vec3 mappedcolor = filmicToneMapping(basecolor);
+	//vec3 mappedcolor = (basecolor);
 	vec3 noise = wut*accuracy*rand(love_PixelCoord).rgb;
 	vec3 finalcolor = mappedcolor + noise + accuracy/2.0;
 	love_Canvases[0] = vec4(finalcolor - mod(finalcolor, accuracy), 1.0);//write to screen

@@ -1,4 +1,4 @@
-local game = require("Rove/Game")
+local game = require("lovlox/game")
 
 game.Workspace = {}
 workspace = game.Workspace

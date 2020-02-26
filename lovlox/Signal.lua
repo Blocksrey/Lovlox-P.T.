@@ -1,14 +1,7 @@
-local Event = require("Rove/Event")
+local Event = require("lovlox/Event")
 
 local meta = {}
 meta.__index = meta
-
-function meta.Connect(self, func)
-	local event = Event.new(func)
-	table.insert(self.events, event)
-	return event
-end
-
 local Signal = {}
 
 function Signal.new()
@@ -22,5 +15,14 @@ function Signal.update(self, ...)
 		event.func(...)
 	end
 end
+
+--meta funcs
+function meta.Connect(self, func)
+	local event = Event.new(func)
+	table.insert(self.events, event)
+	return event
+end
+
+meta.__call = Signal.update
 
 return Signal

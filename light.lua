@@ -1,8 +1,8 @@
 local light = {}
 
 local vertdefs = require("vertdefs")
-local vec3 = require("vec3")
-local mat3 = require("mat3")
+local vec3 = require("algebra/vec3")
+local mat3 = require("algebra/mat3")
 
 local lightmesh do
 	--outer radius of 1:

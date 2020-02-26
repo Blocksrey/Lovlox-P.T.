@@ -1,4 +1,4 @@
-local game = require("Rove/Game")
+local game = require("lovlox/game")
 
 local meta = {}
 meta.__index = meta
