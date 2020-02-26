@@ -1,6 +1,6 @@
-require("lovloxhandler")
+require("lovlox/main")
 
-local rove   = require("lovlox/Main")
+local lovlox = require("lovlox/Main")
 local mat3   = require("algebra/mat3")
 local vec3   = require("algebra/vec3")
 local quat   = require("algebra/quat")
@@ -75,14 +75,6 @@ love.focus:Connect(function(f)
 	focused = f
 end)
 
---love.mousefocus = Signal.new()
-
---[[
-love.mousefocus:Connect(function(...)
-	print(...)
-end)
-
-]]
 love.window.setMode(800, 600, {resizable = true; fullscreen = false;})
 
 --this will allow us to compute the frustum transformation matrix once,
@@ -207,19 +199,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 local meshes = {}
 local lights = {}
 
@@ -325,22 +304,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 --[[
 
 --main_rigidbody
@@ -421,26 +384,11 @@ return nil
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 local lastt = love.timer.getTime()
 
 
 love.draw:Connect(function()
-	rove.render(meshes)
+	lovlox.render(meshes)
 
 	local t = love.timer.getTime()--tick()
 	local dt = t - lastt
