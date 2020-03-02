@@ -10,10 +10,11 @@ local object = require("object")
 local Signal = require("lovlox/Signal")
 
 --load in the geometry shader and compositing shader
-local geomshader = love.graphics.newShader("shaders/geom_pixel_shader.glsl", "shaders/geom_vertex_shader.glsl")
-local lightshader = love.graphics.newShader("shaders/light_pixel_shader.glsl", "shaders/light_vertex_shader.glsl")
-local compshader = love.graphics.newShader("shaders/comp_pixel_shader.glsl")
+local geomshader   = love.graphics.newShader("shaders/geom_pixel_shader.glsl", "shaders/geom_vertex_shader.glsl")
+local lightshader  = love.graphics.newShader("shaders/light_pixel_shader.glsl", "shaders/light_vertex_shader.glsl")
+local compshader   = love.graphics.newShader("shaders/comp_pixel_shader.glsl")
 local debandshader = love.graphics.newShader("shaders/deband_pixel_shader.glsl")
+local vhsshader    = love.graphics.newShader("shaders/vhs_frag.glsl", "shaders/vhs_vert.glsl")
 
 local randomsampler = rand.newsampler(256, 256, rand.triangular4)
 
@@ -113,7 +114,9 @@ local newsphere = object.newsphere
 local newlight = light.new
 
 --for the sake of my battery life
---love.window.setVSync(false)
+love.window.setVSync(false)
+
+local animtex = love.graphics.newImage("woah.png")
 
 local wut = 1
 local shadow = 0
@@ -125,7 +128,7 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 
 	--PREPARE FOR GEOMETRY
 	love.graphics.setWireframe(wut == 0)
-	love.graphics.setBlendMode("replace")
+	--love.graphics.setBlendMode("replace")
 	love.graphics.setMeshCullMode("back")
 	love.graphics.setDepthMode("less", true)
 	love.graphics.setCanvas(geombuffer)
@@ -171,6 +174,7 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	compshader:send("wnorms", geombuffer[2])
 	love.graphics.draw(geombuffer[3])]]
 
+	---[[
 	love.graphics.reset()--just to make sure
 	--love.graphics.rectangle("fill", 0, 0, w, h)
 	love.graphics.setShader(debandshader)
@@ -184,7 +188,11 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	debandshader:send("finalcanvas", compbuffer[1])
 	debandshader:send("wut", wut)
 	love.graphics.setCanvas()
+	--love.graphics.setShader()
 	love.graphics.draw(compbuffer[1])--just straight up color
+	--]]
+	
+	--love.grapics.draw(vhsshader)
 
 	love.graphics.pop()
 end
@@ -219,6 +227,7 @@ love.keypressed:Connect(function(k)
 		shadow = 1 - shadow
 	elseif k == "f11" then
 		love.window.setFullscreen(not love.window.getFullscreen())
+		love.resize()
 	end
 end)
 
@@ -282,12 +291,12 @@ for i = 1, #testmodel do
 end
 
 --local randomoffset = {}
-for i = 1, 100 do
+for i = 1, 32 do
 	lights[i] = newlight()
 	lights[i].setpos(vec3.new(
-		(math.random() - 1/2)*70,
+		(math.random() - 1/2)*64,
 		(math.random())*25,
-		(math.random() - 1/2)*70
+		(math.random() - 1/2)*64
 	))
 	--randomoffset[i] = 5*vec3.new(random.unit3())
 	lights[i].setcolor(vec3.new(

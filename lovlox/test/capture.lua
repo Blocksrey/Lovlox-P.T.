@@ -3,38 +3,55 @@ local nv3        = v3()
 local dot        = nv3.Dot
 local cf         = CFrame.new
 local ncf        = cf()
-local components = ncf.components
-local faa        = CFrame.fromAxisAngle
-local acos       = math.acos
+local cfunp      = ncf.components
 local insert     = table.insert
+local frommatrix = CFrame.fromMatrix
 
-local reflectaxis = v3(0, 0, 1)
-
---math functions
-local function fromaxisangle(v)
-	local m = v.Magnitude
-	return m > 0 and faa(v, m) or ncf
+local function v3unp(v3)
+	return v3.x, v3.y, v3.z
 end
 
-local function toaxisangle(m)
-	local x, y, z, xx, yx, zx, xy, yy, zy, xz, yz, zz = components(m)
-	local c = acos(1/2*(xx + yy + zz - 1))/((zy - yz)*(zy - yz) + (xz - zx)*(xz - zx) + (yx - xy)*(yx - xy))^(1/2)
-	return v3(
-		c*(zy - yz),
-		c*(xz - zx),
-		c*(yx - xy)
-	)
+local function c3unp(c3)
+	return c3.r, c3.g, c3.b
 end
 
-local function vecreflect(vec, norm)
-	return vec - 2*dot(vec, norm)*norm
+local function cfparts(cf)
+	local
+		px, py, pz,
+		xx, yx, zx,
+		xy, yy, zy,
+		xz, yz, zz = cfunp(cf)
+	
+	local p = v3(px, py, pz)
+	local x = v3(xx, xy, xz)
+	local y = v3(yx, yy, yz)
+	local z = v3(zx, zy, zz)
+	
+	return p, x, y, z
 end
 
-local function orireflect(orientation, axis)
-	local axisangle = toaxisangle(orientation)
-	local reflectedaxisangle = vecreflect(axisangle, axis)
-	local reflectedorientation = fromaxisangle(reflectedaxisangle)
-	return reflectedorientation	
+local function v3ref(vec, dir)
+	return vec - 2*dot(vec, dir)*dir
+end
+
+local function cfref(ori, dir)	
+	local p, x, y, z = cfparts(ori)
+	
+	local v = v3ref(p, dir)
+	local i = v3ref(x, dir)
+	local j = v3ref(y, dir)
+	local k = v3ref(z, dir)
+	
+	return frommatrix(v, i, j, k)
+end
+
+local function argstr(str, div, fin, ...)
+	local tab = {...}
+	local len = #tab
+	for ind = 1, len - 1 do
+		str = str..tab[ind]..div
+	end
+	return str..tab[len]..fin
 end
 
 local function recurse(parent, table)
@@ -47,37 +64,17 @@ local function recurse(parent, table)
 	return table
 end
 
-local function dostring(classname, ...)
-	local fin = classname..".new("
-	local tab = {...}
-	local len = #tab
-	for ind = 1, len - 1 do
-		fin = fin..tab[ind]..", "
-	end
-	fin = fin..tab[len]..")"
-	return fin
-end
-
-local function v3unp(v3)
-	return v3.x, v3.y, v3.z
-end
-
-local function c3unp(c3)
-	return c3.r, c3.g, c3.b
-end
-
-local cfunp = components
-
-local function captureworld()
+local function captureworld(reflectaxis)
 	print("\nreturn {")
-	local parts = recurse(workspace, {})
-	for index = 1, #parts do
-		local part = parts[index]
-		local pos = dostring("vec3", v3unp(vecreflect(part.CFrame.Position, reflectaxis)))
-		local ori = dostring("mat3", select(4, cfunp(orireflect(part.CFrame, reflectaxis))))
-		local siz = dostring("vec3", v3unp(part.Size))
-		local col = dostring("vec3", c3unp(part.Color))
-		print("{"..pos..", "..ori..", "..siz..", "..col.."};")
+	local tab = recurse(workspace, {})
+	for ind = 1, #tab do
+		local obj = tab[ind]
+		local cf  = cfref(obj.CFrame, reflectaxis)
+		local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
+		local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
+		local siz = argstr("vec3.new(", ", ", ")", v3unp(obj.Size))
+		local col = argstr("vec3.new(", ", ", ")", c3unp(obj.Color))
+		print(argstr("{", ", ", "};", pos, ori, siz, col))
 	end
 	print("}\n")
 end
