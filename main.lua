@@ -218,6 +218,8 @@ local angx = 0
 local sens = 1/256
 local speed = 8
 
+local showgui = true
+
 love.keypressed:Connect(function(k)
 	if k == "escape" then
 		love.event.quit()
@@ -228,6 +230,10 @@ love.keypressed:Connect(function(k)
 	elseif k == "f11" then
 		love.window.setFullscreen(not love.window.getFullscreen())
 		love.resize()
+	elseif k == "printscreen" then
+		love.graphics.captureScreenshot(os.time()..".png")
+	elseif k == "h" then
+		showgui = not showgui
 	end
 end)
 
@@ -465,18 +471,20 @@ love.draw:Connect(function()
 		lights[i].setcolor(vec3.new(41/64, 227/64, 81/64))
 	end
 
-	drawmeshes(1, near, far, pos, rot, meshes, lights)
-	--love.graphics.print((love.timer.getTime() - t)*1000)
-	love.graphics.print(
-		"debanding enabled: "..wut..
-		"\nssshadows enabled: "..shadow..
-		"\nlight distance scaler: "..yoooo
-		--select(2, lights[1].getdrawdata())[1]
-	)
-	--love.graphics.print(love.timer.getFPS())
-
 	for index, value in next, world.parts do
 		value.CFrame = CFrame.new(math.sin(os.clock()), math.cos(os.clock()*3), 0)*CFrame.Angles(os.clock(), 1/4*os.clock(), -3/8*os.clock())
+	end
+
+	drawmeshes(1, near, far, pos, rot, meshes, lights)
+
+	if showgui then
+		love.graphics.print(
+			"fps: "..love.timer.getFPS()..
+			"\ndebanding enabled: "..wut..
+			"\nssshadows enabled: "..shadow..
+			"\nlight distance scaler: "..yoooo
+			--select(2, lights[1].getdrawdata())[1]
+		)
 	end
 
 	lastt = t
