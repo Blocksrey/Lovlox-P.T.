@@ -130,7 +130,8 @@ end
 
 local spheredefs = {}
 
-function object.newsphere(n)
+function object.newsphere(cr, cg, cb, ca, n)
+	n = n or 1
 	if not spheredefs[n] then
 		--outer radius of 1:
 		local u = ((5 - 5^0.5)/10)^0.5
@@ -192,9 +193,9 @@ function object.newsphere(n)
 					local u = interp(a, b, c, n, i, j):unit()
 					local v = interp(a, b, c, n, i + 1, j):unit()
 					local w = interp(a, b, c, n, i, j + 1):unit()
-					vertices[#vertices + 1] = {u.x, u.y, u.z, u.x, u.y, u.z, 1, 1, 1, 1, 0, 0}
-					vertices[#vertices + 1] = {v.x, v.y, v.z, v.x, v.y, v.z, 1, 1, 1, 1, 0, 0}
-					vertices[#vertices + 1] = {w.x, w.y, w.z, w.x, w.y, w.z, 1, 1, 1, 1, 0, 0}
+					vertices[#vertices + 1] = {u.x, u.y, u.z, u.x, u.y, u.z, cr, cg, cb, ca, 0, 0}
+					vertices[#vertices + 1] = {v.x, v.y, v.z, v.x, v.y, v.z, cr, cg, cb, ca, 0, 0}
+					vertices[#vertices + 1] = {w.x, w.y, w.z, w.x, w.y, w.z, cr, cg, cb, ca, 0, 0}
 				end
 			end
 			for i = 1, n - 1 do
@@ -206,9 +207,9 @@ function object.newsphere(n)
 					local u = interp(a, b, c, n, i, j):unit()
 					local v = interp(a, b, c, n, i - 1, j):unit()
 					local w = interp(a, b, c, n, i, j - 1):unit()
-					vertices[#vertices + 1] = {u.x, u.y, u.z, u.x, u.y, u.z, 1, 1, 1, 1, 0, 0}
-					vertices[#vertices + 1] = {v.x, v.y, v.z, v.x, v.y, v.z, 1, 1, 1, 1, 0, 0}
-					vertices[#vertices + 1] = {w.x, w.y, w.z, w.x, w.y, w.z, 1, 1, 1, 1, 0, 0}
+					vertices[#vertices + 1] = {u.x, u.y, u.z, u.x, u.y, u.z, cr, cg, cb, ca, 0, 0}
+					vertices[#vertices + 1] = {v.x, v.y, v.z, v.x, v.y, v.z, cr, cg, cb, ca, 0, 0}
+					vertices[#vertices + 1] = {w.x, w.y, w.z, w.x, w.y, w.z, cr, cg, cb, ca, 0, 0}
 				end
 			end
 		end
@@ -219,58 +220,118 @@ function object.newsphere(n)
 	return newobject(spheredefs[n])
 end
 
-local boxmesh do
-	local vertices = {
-		{ 1,  1,  1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1,  1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
 
 
-		{-1,  1, -1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1, -1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  0,  1,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
 
+local R = 1/2^(1/2)
 
-		{ 1, -1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  0,  0, -1, 1, 1, 1, 1, 0, 0},
-		{ 1, -1, -1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1,  1, -1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{ 1, -1, -1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
+local function wedgevertexmap(r, g, b, a)
+	return {
+		{-1, -1, -1,  0,  R, -R, r, g, b, a, 0, 0};
+		{ 1,  1,  1,  0,  R, -R, r, g, b, a, 0, 0};
+		{ 1, -1, -1,  0,  R, -R, r, g, b, a, 0, 0};
 
+		{-1, -1, -1,  0,  R, -R, r, g, b, a, 0, 0};
+		{-1,  1,  1,  0,  R, -R, r, g, b, a, 0, 0};
+		{ 1,  1,  1,  0,  R, -R, r, g, b, a, 0, 0};
 
-		{-1, -1,  1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  0, -1,  0, 1, 1, 1, 1, 0, 0},
-		{-1, -1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
-		{ 1, -1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1,  0,  0,  1, 1, 1, 1, 1, 0, 0},
-		{-1, -1,  1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{-1,  1,  1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
-		{-1, -1, -1, -1,  0,  0, 1, 1, 1, 1, 0, 0},
+		{ 1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+		{-1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+		{ 1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+
+		{ 1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0};
+		{ 1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0};
+		{-1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0};
+
+		{-1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0};
+		{-1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0};
+		{ 1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0};
+
+		{-1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+		{ 1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+		{-1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0};
+
+		{-1, -1,  1, -1,  0,  0, r, g, b, a, 0, 0};
+		{-1,  1,  1, -1,  0,  0, r, g, b, a, 0, 0};
+		{-1, -1, -1, -1,  0,  0, r, g, b, a, 0, 0};
+
+		{ 1, -1,  1,  1,  0,  0, r, g, b, a, 0, 0};
+		{ 1, -1, -1,  1,  0,  0, r, g, b, a, 0, 0};
+		{ 1,  1,  1,  1,  0,  0, r, g, b, a, 0, 0};
 	}
-
-	boxmesh = love.graphics.newMesh(vertdefs.mesh, vertices, "triangles", "static")
 end
 
-function object.newbox()
-	return newobject(boxmesh)
+function object.newwedge(r, g, b, a)
+	return newobject(love.graphics.newMesh(vertdefs.mesh, wedgevertexmap(r, g, b, a), "triangles", "static"))
 end
+
+
+
+
+
+
+
+local function boxvertexmap(r, g, b, a)
+	local vertices = {
+		{ 1,  1,  1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1,  1,  1,  0,  1,  0, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  0,  1,  0, r, g, b, a, 0, 0},
+		{-1,  1,  1,  0,  1,  0, r, g, b, a, 0, 0},
+		{ 1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+		{-1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+
+		{-1,  1, -1, -1,  0,  0, r, g, b, a, 0, 0},
+		{-1, -1, -1, -1,  0,  0, r, g, b, a, 0, 0},
+		{-1,  1,  1, -1,  0,  0, r, g, b, a, 0, 0},
+		{-1,  1, -1,  0,  1,  0, r, g, b, a, 0, 0},
+		{-1,  1,  1,  0,  1,  0, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  0,  1,  0, r, g, b, a, 0, 0},
+		{-1,  1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+		{-1, -1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+
+		{ 1, -1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+		{-1, -1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  0,  0, -1, r, g, b, a, 0, 0},
+		{ 1, -1, -1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1,  1, -1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  1,  0,  0, r, g, b, a, 0, 0},
+		{ 1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0},
+		{-1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0},
+
+		{-1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0},
+		{-1, -1, -1,  0, -1,  0, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  0, -1,  0, r, g, b, a, 0, 0},
+		{-1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+		{ 1, -1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+		{-1,  1,  1,  0,  0,  1, r, g, b, a, 0, 0},
+		{-1, -1,  1, -1,  0,  0, r, g, b, a, 0, 0},
+		{-1,  1,  1, -1,  0,  0, r, g, b, a, 0, 0},
+		{-1, -1, -1, -1,  0,  0, r, g, b, a, 0, 0},
+	}
+	
+	for i = 1, #vertices do
+		vertices[i][8] = r
+		vertices[i][9] = g
+		vertices[i][10] = b
+	end
+
+	return vertices
+end
+
+function object.newbox(r, g, b, a)
+	return newobject(love.graphics.newMesh(vertdefs.mesh, boxvertexmap(r, g, b, a), "triangles", "static"))
+end
+
+
+
+
+
+
 
 local tetmesh do
 	local n = 1/3^(1/2)

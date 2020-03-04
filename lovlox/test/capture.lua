@@ -15,6 +15,13 @@ local function c3unp(c3)
 	return c3.r, c3.g, c3.b
 end
 
+local function shunp(sh)
+	return
+		sh == Enum.PartType.Ball     and "Ball"     or
+		sh == Enum.PartType.Block    and "Block"    or
+		sh == Enum.PartType.Cylinder and "Cylinder"
+end
+
 local function cfparts(cf)
 	local
 		px, py, pz,
@@ -34,7 +41,7 @@ local function v3ref(vec, dir)
 	return vec - 2*dot(vec, dir)*dir
 end
 
-local function cfref(ori, dir)	
+local function cfref(ori, dir)
 	local p, x, y, z = cfparts(ori)
 	
 	local v = v3ref(p, dir)
@@ -65,8 +72,8 @@ local function recurse(parent, table)
 end
 
 local function captureworld(reflectaxis)
-	print("\nreturn {")
 	local tab = recurse(workspace, {})
+	print("\nreturn {\nParts = {")
 	for ind = 1, #tab do
 		local obj = tab[ind]
 		local cf  = cfref(obj.CFrame, reflectaxis)
@@ -74,9 +81,24 @@ local function captureworld(reflectaxis)
 		local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
 		local siz = argstr("vec3.new(", ", ", ")", v3unp(obj.Size))
 		local col = argstr("vec3.new(", ", ", ")", c3unp(obj.Color))
-		print(argstr("{", ", ", "};", pos, ori, siz, col))
+		if obj.ClassName == "Part" then
+			local sha = argstr('"', "", '"', shunp(obj.Shape))
+			print(argstr("{", ", ", "};", pos, ori, siz, col, sha))
+		end
 	end
-	print("}\n")
+	print("};\nWedgeParts = {")
+		for ind = 1, #tab do
+		local obj = tab[ind]
+		local cf  = cfref(obj.CFrame, reflectaxis)
+		local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
+		local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
+		local siz = argstr("vec3.new(", ", ", ")", v3unp(obj.Size))
+		local col = argstr("vec3.new(", ", ", ")", c3unp(obj.Color))
+		if obj.ClassName == "WedgePart" then
+			print(argstr("{", ", ", "};", pos, ori, siz, col))
+		end
+	end
+	print("};\n}\n")
 end
 
 return captureworld

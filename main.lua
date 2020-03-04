@@ -288,19 +288,50 @@ love.update:Connect(function(dt)
 end)
 
 local testmodel = require("models/pt")
---im calling testmodel[index] a block. because they are the "building blocks" of models. let's keep this naming convention for now.
-local function blocktomesh(block)
-	local color = block[4]
-	local mesh = newbox(16, color.x, color.y, color.z)
-	mesh.setpos(block[1])
-	mesh.setrot(block[2])
-	mesh.setscale(block[3]/2)
+
+local function robloxparttomesh(robloxpart)
+	local position    = robloxpart[1]
+	local orientation = robloxpart[2]
+	local size        = robloxpart[3]
+	local color       = robloxpart[4]
+	local shape       = robloxpart[5]
+	if shape == "Ball" then
+		local mesh = object.newsphere(color.x, color.y, color.z)
+		mesh.setpos(position)
+		mesh.setrot(orientation)
+		mesh.setscale(size/2)
+		return mesh
+	else
+		local mesh = object.newbox(color.x, color.y, color.z)
+		mesh.setpos(position)
+		mesh.setrot(orientation)
+		mesh.setscale(size/2)
+		return mesh
+	end
+end
+
+local function robloxwedgetomesh(robloxwedgepart)
+	local position    = robloxwedgepart[1]
+	local orientation = robloxwedgepart[2]
+	local size        = robloxwedgepart[3]
+	local color       = robloxwedgepart[4]
+	local mesh = mesh.newwedge(color.x, color.y, color.z)
+	mesh.setpos(position)
+	mesh.setrot(orientation)
+	mesh.setscale(size/2)
 	return mesh
 end
 
-for index = 1, #testmodel do
-	meshes[index] = blocktomesh(testmodel[index])
+--parts
+for index = 1, #testmodel.Parts do
+	meshes[#meshes + 1] = robloxparttomesh(testmodel.Parts[index])
 end
+--wedgeparts
+for index = 1, #testmodel.WedgeParts do
+	--print(testmodel.WedgeParts[index])
+	--meshes[#meshes + 1] = robloxwedgetomesh(testmodel.WedgeParts[index])
+end
+
 
 --local randomoffset = {}
 for i = 1, 32 do
@@ -407,7 +438,7 @@ return nil
 
 local world = require("lovlox/world")
 
-local function parserobloxpart(part)
+local function parserobloxinstance(part)
 	local m = part.CFrame
 	local s = part.Size
 	local c = part.Color
@@ -430,24 +461,19 @@ local function parserobloxpart(part)
 	})
 end
 
-local function handlenewrobloxpart(part)
+local function handlenewrobloxinstance(instance)
 	local index = #meshes + 1
-	meshes[index] = parserobloxpart(part)
-	part.Changed:Connect(function()
-		meshes[index] = parserobloxpart(part)
+	meshes[index] = parserobloxinstance(instance)
+	instance.Changed:Connect(function()
+		meshes[index] = parserobloxinstance(instance)
 	end)
 end
 
-world.partadded:Connect(handlenewrobloxpart)
+--world.partadded:Connect(handlenewrobloxinstance)
 
 for index, value in next, world.parts do
-	handlenewrobloxpart(value)
+	--handlenewrobloxinstance(value)
 end
-
-
-
-
-
 
 
 
@@ -468,7 +494,7 @@ love.draw:Connect(function()
 		local lpos = lights[i].getpos()
 		local dpos = lpos - tpos
 		lights[i].setpos(tpos + 0.01^dt*dpos)
-		lights[i].setcolor(vec3.new(41/64, 227/64, 81/64))
+		lights[i].setcolor(vec3.new(5, 5, 5))
 	end
 
 	for index, value in next, world.parts do
