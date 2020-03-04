@@ -24,7 +24,7 @@ vec3 filmicToneMapping(vec3 color){
 	return color;
 }
 
-const float accuracy = 1.0/256.0;
+const float accuracy = 1.0/16.0;
 
 void effect(){
 	//compute inverted coordinates

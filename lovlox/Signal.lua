@@ -12,7 +12,9 @@ end
 
 function Signal.update(self, ...)
 	for index, event in next, self.events do
-		event.func(...)
+		if event.func then
+			event.func(...)
+		end
 	end
 end
 

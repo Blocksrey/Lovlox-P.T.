@@ -19,8 +19,6 @@ require("lovlox/Enums/Material")
 require("lovlox/Enums/PartType")
 require("lovlox/Enums/SurfaceType")
 
-
-
 function _G.load(name)
 	local find = require("lovlox/test/"..name)
 	if find then
@@ -33,8 +31,6 @@ function _G.load(name)
 end
 
 require("lovlox/test/main")
-
-
 
 local lovlox = {}
 

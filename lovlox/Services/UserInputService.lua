@@ -10,10 +10,10 @@ end
 
 local service = {}
 
-game.UserInputService = service
-
 service.InputBegan   = Signal.new()
 service.InputChanged = Signal.new()
 service.InputEnded   = Signal.new()
+
+game.UserInputService = service
 
 setmetatable(service, meta)

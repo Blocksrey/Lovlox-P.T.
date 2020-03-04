@@ -1,11 +1,12 @@
+local Object = require("lovlox/Object")
+
 local meta = {}
 meta.__index = meta
 
 local Instance = {}
 
 function Instance.new(type, parent)
-	local self = require("lovlox/Objects/"..type).new()
-	return setmetatable(self, meta)
+	return require("lovlox/Objects/"..type).new()
 end
 
 return Instance

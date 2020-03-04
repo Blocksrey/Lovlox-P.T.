@@ -212,7 +212,7 @@ local lights = {}
 
 local near = 1/10
 local far = 5000
-local pos = vec3.new(0, 0, -5)
+local pos = vec3.new(0, 0, 0)
 local angy = 0
 local angx = 0
 local sens = 1/256
@@ -282,12 +282,18 @@ love.update:Connect(function(dt)
 end)
 
 local testmodel = require("models/pt")
-for i = 1, #testmodel do
-	local color = testmodel[i][4]
-	meshes[i] = newbox(16, color.x, color.y, color.z)
-	meshes[i].setpos(testmodel[i][1])
-	meshes[i].setrot(testmodel[i][2])
-	meshes[i].setscale(testmodel[i][3]/2)
+--im calling testmodel[index] a block. because they are the "building blocks" of models. let's keep this naming convention for now.
+local function blocktomesh(block)
+	local color = block[4]
+	local mesh = newbox(16, color.x, color.y, color.z)
+	mesh.setpos(block[1])
+	mesh.setrot(block[2])
+	mesh.setscale(block[3]/2)
+	return mesh
+end
+
+for index = 1, #testmodel do
+	meshes[index] = blocktomesh(testmodel[index])
 end
 
 --local randomoffset = {}
@@ -306,6 +312,11 @@ for i = 1, 32 do
 	))
 	lights[i].setalpha(1/64)
 end
+
+
+
+
+
 
 
 
@@ -388,13 +399,56 @@ return nil
 
 ]]
 
+local world = require("lovlox/world")
+
+local function parserobloxpart(part)
+	local m = part.CFrame
+	local s = part.Size
+	local c = part.Color
+
+	local px, py, pz, xx, yx, zx, xy, yy, zy, xz, yz, zz = m:components()
+	local sx, sy, sz = s.x, s.y, s.z
+	local cr, cg, cb = c.r, c.g, c.b
+
+	--print()
+	--print(px, py, pz)
+	--print(sx, sy, sz)
+	--print(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+	--print(cr, cg, cb)
+
+	return blocktomesh({
+		vec3.new(px, py, pz);
+		mat3.new(xx, yx, zx, xy, yy, zy, xz, yz, zz);
+		vec3.new(sx, sy, sz);
+		vec3.new(cr, cg, cb);
+	})
+end
+
+local function handlenewrobloxpart(part)
+	local index = #meshes + 1
+	meshes[index] = parserobloxpart(part)
+	part.Changed:Connect(function()
+		meshes[index] = parserobloxpart(part)
+	end)
+end
+
+world.partadded:Connect(handlenewrobloxpart)
+
+for index, value in next, world.parts do
+	handlenewrobloxpart(value)
+end
+
+
+
+
+
+
 
 
 
 
 
 local lastt = love.timer.getTime()
-
 
 love.draw:Connect(function()
 	lovlox.render(meshes)
@@ -404,11 +458,11 @@ love.draw:Connect(function()
 	local rot = mat3.fromeuleryxz(angy, angx, 0)
 
 	for i = 1, 1 do
-		local tpos = pos + rot*vec3.new(0, 0, 10)
+		local tpos = pos + rot*vec3.new(1/2, -1, 3/2)
 		local lpos = lights[i].getpos()
 		local dpos = lpos - tpos
 		lights[i].setpos(tpos + 0.01^dt*dpos)
-		lights[i].setcolor(vec3.new(5, 5, 5))
+		lights[i].setcolor(vec3.new(41/64, 227/64, 81/64))
 	end
 
 	drawmeshes(1, near, far, pos, rot, meshes, lights)
@@ -420,5 +474,10 @@ love.draw:Connect(function()
 		--select(2, lights[1].getdrawdata())[1]
 	)
 	--love.graphics.print(love.timer.getFPS())
+
+	for index, value in next, world.parts do
+		value.CFrame = CFrame.new(math.sin(os.clock()), math.cos(os.clock()*3), 0)*CFrame.Angles(os.clock(), 1/4*os.clock(), -3/8*os.clock())
+	end
+
 	lastt = t
 end)
