@@ -314,11 +314,13 @@ local function boxvertexmap(r, g, b, a)
 		{-1, -1, -1, -1,  0,  0, r, g, b, a, 0, 0},
 	}
 	
+	--[[
 	for i = 1, #vertices do
 		vertices[i][8] = r
 		vertices[i][9] = g
 		vertices[i][10] = b
 	end
+	]]
 
 	return vertices
 end

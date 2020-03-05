@@ -1,11 +1,12 @@
+local axisangle = _G.require("axisangle")
+local cframe    = _G.require("cframe")
+
 local v3         = Vector3.new
 local nv3        = v3()
 local dot        = nv3.Dot
 local cf         = CFrame.new
 local ncf        = cf()
 local cfunp      = ncf.components
-local insert     = table.insert
-local frommatrix = CFrame.fromMatrix
 
 local function v3unp(v3)
 	return v3.x, v3.y, v3.z
@@ -45,11 +46,10 @@ local function cfref(ori, dir)
 	local p, x, y, z = cfparts(ori)
 	
 	local v = v3ref(p, dir)
-	local i = v3ref(x, dir)
-	local j = v3ref(y, dir)
-	local k = v3ref(z, dir)
+	local a = axisangle.matrix(ori)
+	local r = v3ref(a, dir)
 	
-	return frommatrix(v, i, j, k)
+	return cframe.axisangle(r) + v
 end
 
 local function argstr(str, div, fin, ...)
@@ -61,44 +61,55 @@ local function argstr(str, div, fin, ...)
 	return str..tab[len]..fin
 end
 
-local function recurse(parent, table)
-	for index, value in next, parent:GetChildren() do
-		if value:IsA("BasePart") then
-			insert(table, value)
-		end
-		recurse(value, table)
-	end
-	return table
+local ignorelist = {
+	Terrain = true;
+	Camera = true;
+	Decal = true;
+	Folder = true;
+}
+
+local structure = {}
+
+structure.Part = function(o, a)
+	local cf  = cfref(o.CFrame, a)
+	local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
+	local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
+	local siz = argstr("vec3.new(", ", ", ")", v3unp(o.Size))
+	local col = argstr("vec3.new(", ", ", ")", c3unp(o.Color))
+	local sha = argstr('"', "", '"', shunp(o.Shape))
+	return argstr("{", ", ", "};", pos, ori, siz, col, sha)
 end
 
-local function captureworld(reflectaxis)
-	local tab = recurse(workspace, {})
-	print("\nreturn {\nParts = {")
-	for ind = 1, #tab do
-		local obj = tab[ind]
-		local cf  = cfref(obj.CFrame, reflectaxis)
-		local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
-		local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
-		local siz = argstr("vec3.new(", ", ", ")", v3unp(obj.Size))
-		local col = argstr("vec3.new(", ", ", ")", c3unp(obj.Color))
-		if obj.ClassName == "Part" then
-			local sha = argstr('"', "", '"', shunp(obj.Shape))
-			print(argstr("{", ", ", "};", pos, ori, siz, col, sha))
+structure.WedgePart = function(o, a)
+	local cf  = cfref(o.CFrame, a)
+	local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
+	local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
+	local siz = argstr("vec3.new(", ", ", ")", v3unp(o.Size))
+	local col = argstr("vec3.new(", ", ", ")", c3unp(o.Color))
+	return argstr("{", ", ", "};", pos, ori, siz, col)
+end
+
+structure.MeshPart = structure.WedgePart
+
+local function captureworld(a)
+	local t = workspace:GetDescendants()
+	for i = 1, #t do
+		local obj = t[i]
+		if ignorelist[obj.ClassName] then
+			t[i] = nil
 		end
 	end
-	print("};\nWedgeParts = {")
-		for ind = 1, #tab do
-		local obj = tab[ind]
-		local cf  = cfref(obj.CFrame, reflectaxis)
-		local pos = argstr("vec3.new(", ", ", ")", v3unp(cf.Position))
-		local ori = argstr("mat3.new(", ", ", ")", select(4, cfunp(cf)))
-		local siz = argstr("vec3.new(", ", ", ")", v3unp(obj.Size))
-		local col = argstr("vec3.new(", ", ", ")", c3unp(obj.Color))
-		if obj.ClassName == "WedgePart" then
-			print(argstr("{", ", ", "};", pos, ori, siz, col))
+	print("return {")
+	for i0, v0 in next, structure do
+		print(i0.." = {")
+		for i1, v1 in next, t do
+			if v1.ClassName == i0 then
+				print(v0(v1, a))
+			end
 		end
+		print("};")
 	end
-	print("};\n}\n")
+	print("}")
 end
 
 return captureworld

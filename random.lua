@@ -144,20 +144,20 @@ function random.triangular3()
 		rand() + rand() - 1
 end
 
+function random.triangular4()
+	return
+		rand() + rand() - 1,
+		rand() + rand() - 1,
+		rand() + rand() - 1,
+		rand() + rand() - 1
+end
+
 function random.triangular4x2()
 	return
 		2*(rand() + rand() - 1),
 		2*(rand() + rand() - 1),
 		2*(rand() + rand() - 1),
 		2*(rand() + rand() - 1)
-end
-
-function random.triangular4()
-	return
-		(rand() + rand() - 1),
-		(rand() + rand() - 1),
-		(rand() + rand() - 1),
-		(rand() + rand() - 1)
 end
 
 --just make some random values that the buffers can use

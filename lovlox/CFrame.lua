@@ -77,10 +77,11 @@ function meta.__mul(c1,c2)
 		local ax,ay,az,axx,ayx,azx,axy,ayy,azy,axz,ayz,azz=c1:components()
 		local bx,by,bz,bxx,byx,bzx,bxy,byy,bzy,bxz,byz,bzz=c2:components()
 		return new(
-		bx*axx+by*ayx+bz*azx+ax,bx*axy+by*ayy+bz*azy+ay,bx*axz+by*ayz+bz*azz+az,
-		bxx*axx+bxy*ayx+bxz*azx,byx*axx+byy*ayx+byz*azx,bzx*axx+bzy*ayx+bzz*azx,
-		bxx*axy+bxy*ayy+bxz*azy,byx*axy+byy*ayy+byz*azy,bzx*axy+bzy*ayy+bzz*azy,
-		bxx*axz+bxy*ayz+bxz*azz,byx*axz+byy*ayz+byz*azz,bzx*axz+bzy*ayz+bzz*azz)
+			bx*axx+by*ayx+bz*azx+ax,bx*axy+by*ayy+bz*azy+ay,bx*axz+by*ayz+bz*azz+az,
+			bxx*axx+bxy*ayx+bxz*azx,byx*axx+byy*ayx+byz*azx,bzx*axx+bzy*ayx+bzz*azx,
+			bxx*axy+bxy*ayy+bxz*azy,byx*axy+byy*ayy+byz*azy,bzx*axy+bzy*ayy+bzz*azy,
+			bxx*axz+bxy*ayz+bxz*azz,byx*axz+byy*ayz+byz*azz,bzx*axz+bzy*ayz+bzz*azz
+		)
 	else
 		local v3,ax,ay,az,axx,ayx,azx,axy,ayy,azy,axz,ayz,azz
 		if type(c1)=="table" and c1.type=="Vector3" then

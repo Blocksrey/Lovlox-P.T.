@@ -1,5 +1,7 @@
 require("lovlox/main")
 
+io.stdout:setvbuf("no")
+
 local lovlox = require("lovlox/Main")
 local mat3   = require("algebra/mat3")
 local vec3   = require("algebra/vec3")
@@ -114,7 +116,7 @@ local newsphere = object.newsphere
 local newlight = light.new
 
 --for the sake of my battery life
-love.window.setVSync(false)
+--love.window.setVSync(false)
 
 local animtex = love.graphics.newImage("woah.png")
 
@@ -315,7 +317,7 @@ local function robloxwedgetomesh(robloxwedgepart)
 	local orientation = robloxwedgepart[2]
 	local size        = robloxwedgepart[3]
 	local color       = robloxwedgepart[4]
-	local mesh = mesh.newwedge(color.x, color.y, color.z)
+	local mesh = object.newwedge(color.x, color.y, color.z)
 	mesh.setpos(position)
 	mesh.setrot(orientation)
 	mesh.setscale(size/2)
@@ -323,13 +325,12 @@ local function robloxwedgetomesh(robloxwedgepart)
 end
 
 --parts
-for index = 1, #testmodel.Parts do
-	meshes[#meshes + 1] = robloxparttomesh(testmodel.Parts[index])
+for index = 1, #testmodel.Part do
+	meshes[#meshes + 1] = robloxparttomesh(testmodel.Part[index])
 end
 --wedgeparts
-for index = 1, #testmodel.WedgeParts do
-	--print(testmodel.WedgeParts[index])
-	--meshes[#meshes + 1] = robloxwedgetomesh(testmodel.WedgeParts[index])
+for index = 1, #testmodel.WedgePart do
+	meshes[#meshes + 1] = robloxwedgetomesh(testmodel.WedgePart[index])
 end
 
 
