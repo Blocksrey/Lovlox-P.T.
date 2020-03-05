@@ -332,7 +332,10 @@ end
 for index = 1, #testmodel.WedgePart do
 	meshes[#meshes + 1] = robloxwedgetomesh(testmodel.WedgePart[index])
 end
-
+--meshparts
+for index = 1, #testmodel.MeshPart do
+	meshes[#meshes + 1] = robloxparttomesh(testmodel.MeshPart[index])
+end
 
 --local randomoffset = {}
 for i = 1, 32 do
