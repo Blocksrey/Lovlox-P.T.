@@ -205,7 +205,7 @@ local lights = {}
 
 local near = 1/10
 local far = 5000
-local pos = vec3.new(0, 0, 0)
+local pos = vec3.new(-19, 12, -20)
 local angy = 0
 local angx = 0
 local sens = 1/256
@@ -322,6 +322,20 @@ for index = 1, #testmodel.MeshPart do
 	meshes[#meshes + 1] = robloxparttomesh(testmodel.MeshPart[index])
 end
 
+--lights
+for index = 1, #testmodel.light do
+	lights[index] = newlight()
+	lights[index].setpos(testmodel.light[index][1])
+	lights[index].setalpha(1/256/testmodel.light[index][2]:magnitude()/testmodel.light[index][4])
+	lights[index].setcolor(10*testmodel.light[index][3])
+end
+
+local flashlight = newlight()
+flashlight.setalpha(1/64)
+flashlight.setcolor(vec3.new(4, 5, 6))
+lights[#lights + 1] = flashlight
+
+--[[
 --local randomoffset = {}
 for i = 1, 32 do
 	lights[i] = newlight()
@@ -330,7 +344,6 @@ for i = 1, 32 do
 		(math.random())*25,
 		(math.random() - 1/2)*64
 	))
-	--randomoffset[i] = 5*vec3.new(random.unit3())
 	lights[i].setcolor(vec3.new(
 		math.random()*10,
 		math.random()*10,
@@ -338,6 +351,7 @@ for i = 1, 32 do
 	))
 	lights[i].setalpha(1/64)
 end
+]]
 
 
 
@@ -476,12 +490,12 @@ love.draw:Connect(function()
 	local dt = t - lastt
 	local rot = mat3.fromeuleryxz(angy, angx, 0)
 
-	for i = 1, 1 do
+	--flashlight
+	do
 		local tpos = pos + rot*vec3.new(1/2, -1, 3/2)
-		local lpos = lights[i].getpos()
+		local lpos = flashlight.getpos()
 		local dpos = lpos - tpos
-		lights[i].setpos(tpos + 0.01^dt*dpos)
-		lights[i].setcolor(vec3.new(5, 5, 5))
+		flashlight.setpos(tpos + 0.01^dt*dpos)
 	end
 
 	for index, value in next, world.parts do
