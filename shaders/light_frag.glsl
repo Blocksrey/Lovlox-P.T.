@@ -83,6 +83,7 @@ void effect(){
 		float brightness = pointlightbrightness(vertT[0].x, vertT[3].xyz - wvert, wnorm);
 		float visible = screenraycast(64.0*shadow, wvert, vertT[3].xyz);
 
+		//love_Canvases[0] = vec4(visible*brightness*lightcolor*color, 1.0);
 		love_Canvases[0] = vec4(visible*brightness*lightcolor*color, 1.0);
 	}
 }

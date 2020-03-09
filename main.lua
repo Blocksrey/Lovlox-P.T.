@@ -2,23 +2,21 @@ require("lovlox/main")
 
 io.stdout:setvbuf("no")
 
-local lovlox = require("lovlox/Main")
-local mat3   = require("algebra/mat3")
-local vec3   = require("algebra/vec3")
-local quat   = require("algebra/quat")
-local rand   = require("random")
-local light  = require("light")
-local object = require("object")
-local Signal = require("lovlox/Signal")
+local lovlox  = require("lovlox/Main")
+local mat3    = require("algebra/mat3")
+local vec3    = require("algebra/vec3")
+local quat    = require("algebra/quat")
+local rand    = require("random")
+local light   = require("light")
+local object  = require("object")
+local Signal  = require("lovlox/Signal")
 
 --load in the geometry shader and compositing shader
-local geomshader   = love.graphics.newShader("shaders/geom_pixel_shader.glsl", "shaders/geom_vertex_shader.glsl")
-local lightshader  = love.graphics.newShader("shaders/light_pixel_shader.glsl", "shaders/light_vertex_shader.glsl")
-local compshader   = love.graphics.newShader("shaders/comp_pixel_shader.glsl")
-local debandshader = love.graphics.newShader("shaders/deband_pixel_shader.glsl")
-local vhsshader    = love.graphics.newShader("shaders/vhs_frag.glsl", "shaders/vhs_vert.glsl")
-
-local randomsampler = rand.newsampler(256, 256, rand.triangular4)
+local geomshader   = love.graphics.newShader("shaders/geom_frag.glsl", "shaders/geom_vert.glsl")
+local lightshader  = love.graphics.newShader("shaders/light_frag.glsl", "shaders/light_vert.glsl")
+local compshader   = love.graphics.newShader("shaders/comp_frag.glsl")
+local debandshader = love.graphics.newShader("shaders/deband_frag.glsl")
+--local vhsshader    = love.graphics.newShader("shaders/vhs_frag.glsl", "shaders/vhs_vert.glsl")
 
 --make signals
 love.mousefocus = Signal.new()
@@ -30,13 +28,17 @@ love.update     = Signal.new()
 love.draw       = Signal.new()
 love.resize     = Signal.new()
 
+local overlay = require("overlay")
+
+local randomsampler = rand.newsampler(256, 256, rand.triangular4)
+
 --make the buffers
 local geombuffer
 local compbuffer
 local function makebuffers()
 	local w, h = love.graphics.getDimensions()
 
-	local depths = love.graphics.newCanvas(w, h, {format = "depth24";})-- readable = true;})
+	local depths = love.graphics.newCanvas(w, h, {format = "depth24";})
 	local wverts = love.graphics.newCanvas(w, h, {format = "rgba32f";})
 	local wnorms = love.graphics.newCanvas(w, h, {format = "rgba32f";})
 	local colors = love.graphics.newCanvas(w, h, {format = "rgba32f";})
@@ -168,17 +170,9 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 		lightshader:send("lightcolor", color)
 		love.graphics.draw(mesh)
 	end
-	--]]
-	--[[love.graphics.setDepthMode()
-	love.graphics.setShader(compshader)
-	love.graphics.setCanvas(compbuffer)
-	compshader:send("wverts", geombuffer[1])
-	compshader:send("wnorms", geombuffer[2])
-	love.graphics.draw(geombuffer[3])]]
 
 	---[[
 	love.graphics.reset()--just to make sure
-	--love.graphics.rectangle("fill", 0, 0, w, h)
 	love.graphics.setShader(debandshader)
 	do
 		local image, size, offset = randomsampler.getdrawdata()
@@ -188,13 +182,10 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	end
 	debandshader:send("screendim", {w, h})
 	debandshader:send("finalcanvas", compbuffer[1])
-	debandshader:send("wut", wut)
 	love.graphics.setCanvas()
 	--love.graphics.setShader()
 	love.graphics.draw(compbuffer[1])--just straight up color
 	--]]
-	
-	--love.grapics.draw(vhsshader)
 
 	love.graphics.pop()
 end
@@ -220,8 +211,6 @@ local angx = 0
 local sens = 1/256
 local speed = 8
 
-local showgui = true
-
 love.keypressed:Connect(function(k)
 	if k == "escape" then
 		love.event.quit()
@@ -234,11 +223,8 @@ love.keypressed:Connect(function(k)
 		love.resize()
 	elseif k == "printscreen" then
 		love.graphics.captureScreenshot(os.time()..".png")
-	elseif k == "h" then
-		showgui = not showgui
 	end
 end)
-
 
 local yoooo = -48
 love.wheelmoved:Connect(function(x, y)
@@ -255,7 +241,6 @@ end)
 local function clamp(p, a, b)
 	return p < a and a or p > b and b or p
 end
-
 
 local pi = math.pi
 
@@ -482,8 +467,6 @@ end
 
 
 
-
-
 local lastt = love.timer.getTime()
 
 love.draw:Connect(function()
@@ -506,16 +489,6 @@ love.draw:Connect(function()
 	end
 
 	drawmeshes(1, near, far, pos, rot, meshes, lights)
-
-	if showgui then
-		love.graphics.print(
-			"fps: "..love.timer.getFPS()..
-			"\ndebanding enabled: "..wut..
-			"\nssshadows enabled: "..shadow..
-			"\nlight distance scaler: "..yoooo
-			--select(2, lights[1].getdrawdata())[1]
-		)
-	end
 
 	lastt = t
 end)

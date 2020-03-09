@@ -42,6 +42,7 @@ vec4 effect(vec4 Color, Image colors, vec2 coords, vec2 PixelPosition){
 		vec3 lightatmos = hemibrightness(wnorm.y)*atmoscolor;
 		vec3 lightpoint = 100.0*pointlightbrightness(pointpos - wvert, wnorm)*pointcolor;
 
+		return vec4(1, 0, 0, 1);
 		return vec4((lightatmos + lightpoint)*color, 1.0);
 	}
 }
