@@ -280,14 +280,51 @@ end)
 
 local testmodel = require("models/pt")
 
-local function robloxparttomesh(robloxpart)
-	local position    = robloxpart[1]
-	local orientation = robloxpart[2]
-	local size        = robloxpart[3]
-	local color       = robloxpart[4]
-	local shape       = robloxpart[5]
+local function robloxinstancetomesh(robloxpart)
+	local position
+	local orientation
+	local size
+	local color
+	local shape
+
+	if robloxpart.ClassName then
+		local m = robloxpart.CFrame
+		local s = robloxpart.Size
+		local c = robloxpart.Color
+
+		local px, py, pz, xx, yx, zx, xy, yy, zy, xz, yz, zz = m:components()
+		local sx, sy, sz = s.x, s.y, s.z
+		local cr, cg, cb = c.r, c.g, c.b
+
+		if robloxpart.ClassName == "WedgePart" then
+			position    = vec3.new(px, py, pz)
+			orientation = mat3.new(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+			size        = vec3.new(sx, sy, sz)
+			color       = vec3.new(cr, cg, cb)
+			shape       = "WedgePart"
+		else
+			position    = vec3.new(px, py, pz)
+			orientation = mat3.new(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+			size        = vec3.new(sx, sy, sz)
+			color       = vec3.new(cr, cg, cb)
+			shape       = robloxpart.Shape
+		end
+	else
+		position    = robloxpart[1]
+		orientation = robloxpart[2]
+		size        = robloxpart[3]
+		color       = robloxpart[4]
+		shape       = robloxpart[5]
+	end
+
 	if shape == "Ball" then
 		local mesh = object.newsphere(color.x, color.y, color.z)
+		mesh.setpos(position)
+		mesh.setrot(orientation)
+		mesh.setscale(size/2)
+		return mesh
+	elseif shape == "WedgePart" then
+		local mesh = object.newwedge(color.x, color.y, color.z)
 		mesh.setpos(position)
 		mesh.setrot(orientation)
 		mesh.setscale(size/2)
@@ -301,29 +338,17 @@ local function robloxparttomesh(robloxpart)
 	end
 end
 
-local function robloxwedgetomesh(robloxwedgepart)
-	local position    = robloxwedgepart[1]
-	local orientation = robloxwedgepart[2]
-	local size        = robloxwedgepart[3]
-	local color       = robloxwedgepart[4]
-	local mesh = object.newwedge(color.x, color.y, color.z)
-	mesh.setpos(position)
-	mesh.setrot(orientation)
-	mesh.setscale(size/2)
-	return mesh
-end
-
 --parts
 for index = 1, #testmodel.Part do
-	meshes[#meshes + 1] = robloxparttomesh(testmodel.Part[index])
+	meshes[#meshes + 1] = robloxinstancetomesh(testmodel.Part[index])
 end
 --wedgeparts
 for index = 1, #testmodel.WedgePart do
-	meshes[#meshes + 1] = robloxwedgetomesh(testmodel.WedgePart[index])
+	meshes[#meshes + 1] = robloxinstancetomesh(testmodel.WedgePart[index])
 end
 --meshparts
 for index = 1, #testmodel.MeshPart do
-	meshes[#meshes + 1] = robloxparttomesh(testmodel.MeshPart[index])
+	meshes[#meshes + 1] = robloxinstancetomesh(testmodel.MeshPart[index])
 end
 
 --lights
@@ -445,6 +470,7 @@ return nil
 
 local world = require("lovlox/world")
 
+--[[
 local function parserobloxinstance(part)
 	local m = part.CFrame
 	local s = part.Size
@@ -467,19 +493,20 @@ local function parserobloxinstance(part)
 		vec3.new(cr, cg, cb);
 	})
 end
+]]
 
 local function handlenewrobloxinstance(instance)
 	local index = #meshes + 1
-	meshes[index] = parserobloxinstance(instance)
+	meshes[index] = robloxinstancetomesh(instance)
 	instance.Changed:Connect(function()
-		meshes[index] = parserobloxinstance(instance)
+		meshes[index] = robloxinstancetomesh(instance)
 	end)
 end
 
---world.partadded:Connect(handlenewrobloxinstance)
+world.partadded:Connect(handlenewrobloxinstance)
 
 for index, value in next, world.parts do
-	--handlenewrobloxinstance(value)
+	handlenewrobloxinstance(value)
 end
 
 
