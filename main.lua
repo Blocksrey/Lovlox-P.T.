@@ -3,14 +3,15 @@ io.stdout:setvbuf("no")
 local cos = math.cos
 local sin = math.sin
 
-local lovlox  = require("lovlox/main")
-local mat3    = require("algebra/mat3")
-local vec3    = require("algebra/vec3")
-local quat    = require("algebra/quat")
-local rand    = require("random")
-local light   = require("light")
-local object  = require("object")
-local Signal  = require("lovlox/Signal")
+local lovlox   = require("lovlox/main")
+local mat3     = require("algebra/mat3")
+local vec3     = require("algebra/vec3")
+local quat     = require("algebra/quat")
+local rand     = require("random")
+local light    = require("light")
+local object   = require("object")
+local Signal   = require("lovlox/Signal")
+local collider = require("collider")
 
 --load in the geometry shader and compositing shader
 local geomshader   = love.graphics.newShader("shaders/geom_frag.glsl", "shaders/geom_vert.glsl")
@@ -599,13 +600,21 @@ local function lininterp(a, b, t)
 	end
 end
 
+
+
+
+
+local collider0 = collider.new({})
+
 love.update:Connect(function(dt)
 	local keyd = love.keyboard.isDown("d") and 1 or 0
 	local keya = love.keyboard.isDown("a") and 1 or 0
 	local keyw = love.keyboard.isDown("w") and 1 or 0
 	local keys = love.keyboard.isDown("s") and 1 or 0
 	local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
-	
+
+	collider0.update()
+		
 	doorcamanimtime = doorcamanimtime + dt
 
 	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
@@ -624,12 +633,6 @@ love.update:Connect(function(dt)
 	updater.update(stepupdater, frametime)
 	
 end)
-
-
-
-
-
-
 
 
 

@@ -1,10 +1,16 @@
 --global scope stuff
-game     = require("lovlox/game")
-Vector3  = require("lovlox/Vector3")
-Color3   = require("lovlox/Color3")
-CFrame   = require("lovlox/CFrame")
-Instance = require("lovlox/Instance")
-Enum     = require("lovlox/Enum")
+game      = require("lovlox/game")
+Vector3   = require("lovlox/Vector3")
+Color3    = require("lovlox/Color3")
+CFrame    = require("lovlox/CFrame")
+Instance  = require("lovlox/Instance")
+Enum      = require("lovlox/Enum")
+Ray       = require("lovlox/Ray")
+tick      = require("lovlox/tick")
+workspace = require("lovlox/workspace")
+Region3   = require("lovlox/Region3")
+
+print(workspace.FindPartOnRayWithIgnoreList)
 
 --service instances
 require("lovlox/Services/ReplicatedFirst")

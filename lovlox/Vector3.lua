@@ -1,7 +1,7 @@
 local meta = {}
 meta.__index = meta
 
-local function new(x, y, z)
+local function old(x, y, z)
 	local self = {}
 
 	self.type = "Vector3"
@@ -11,6 +11,14 @@ local function new(x, y, z)
 	self.z = z or 0
 
 	return setmetatable(self, meta)
+end
+
+local function new(x, y, z)
+	local v = old(x, y, z)
+	local x, y, z = v.x, v.y, v.z
+	v.magnitude = (x*x + y*y + z*z)^(1/2)
+	v.unit = old(x/v.magnitude, y/v.magnitude, z/v.magnitude)
+	return v
 end
 
 function meta.Dot(a, b)
@@ -34,11 +42,27 @@ function meta.__sub(a, b)
 end
 
 function meta.__mul(a, b)
-	return new(a.x*b.x, a.y*b.y, a.z*b.z)
+	if type(a) ~= "number" then
+		if type(b) == "number" then
+			return new(a.x*b, a.y*b, a.z*b)
+		elseif b.type == "Vector3" then
+			return new(a.x*b.x, a.y*b.y, a.z*b.z)
+		end
+	else
+		return new(a*b.x, a*b.y, a*b.z)
+	end
 end
 
 function meta.__div(a, b)
-	return new(a.x/b.x, a.y/b.y, a.z/b.z)
+	if type(a) ~= "number" then
+		if type(b) == "number" then
+			return new(a.x/b, a.y/b, a.z/b)
+		elseif b.type == "Vector3" then
+			return new(a.x/b.x, a.y/b.y, a.z/b.z)
+		end
+	else
+		--return new(a*b.x, a*b.y, a*b.z)
+	end
 end
 
 function meta.__unm(self)
