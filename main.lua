@@ -123,8 +123,6 @@ local newlight = light.new
 
 local scaryvalue = 0
 
-local animtex = love.graphics.newImage("woah.png")
-
 local wut = 1
 local shadow = 0
 local function drawmeshes(height, near, far, pos, rot, meshes, lights)
