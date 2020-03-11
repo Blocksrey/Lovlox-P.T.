@@ -2,6 +2,9 @@ require("lovlox/main")
 
 io.stdout:setvbuf("no")
 
+local cos = math.cos
+local sin = math.sin
+
 local lovlox  = require("lovlox/Main")
 local mat3    = require("algebra/mat3")
 local vec3    = require("algebra/vec3")
@@ -205,7 +208,8 @@ local lights = {}
 
 local near = 1/10
 local far = 5000
-local pos = vec3.new(-19, 12, -20)
+local pos = vec3.new(-19, 7, -20)
+local rot = mat3.identity
 local angy = 0
 local angx = 0
 local sens = 1/256
@@ -261,7 +265,7 @@ love.update:Connect(function(dt)
 		mul = mul/8
 	end
 
-	local rot = mat3.fromeuleryxz(angy, angx, 0)
+	--local rot = mat3.fromeuleryxz(angy, angx, 0)
 
 	local keyd = love.keyboard.isDown("d") and 1 or 0
 	local keya = love.keyboard.isDown("a") and 1 or 0
@@ -481,6 +485,150 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local controller = require("controller")
+local updater    = require("updater")
+
+--constants
+local pi = math.pi
+local E  = math.exp(1)
+
+local controller0 = controller.new({
+	--variable
+	t = os.clock();
+	p = pos;
+	--constant
+	a = vec3.new(0, 0, 0);
+	r = 1;
+})
+
+local function tabrand(table)
+	return table[math.random(1, #table)]
+end
+
+local doorcamanimtime = 0
+
+
+local footstepsources = {
+	love.audio.newSource("audio/wood_boot_1.mp3", "static");
+	love.audio.newSource("audio/wood_boot_2.mp3", "static");
+	love.audio.newSource("audio/wood_boot_3.mp3", "static");
+	love.audio.newSource("audio/wood_boot_4.mp3", "static");
+	love.audio.newSource("audio/wood_boot_5.mp3", "static");
+}
+
+local stepupdater = updater.new({i = 1/5*pi, v = 1/10*pi})
+stepupdater.f = function(t)
+	local source = tabrand(footstepsources)
+	source:stop()
+	source:play()
+end
+
+local frametime = 0
+
+local eyeheight        = 11/2
+local mousecoefficient = 1/128
+
+
+
+local function constantlerp(a, b, p)
+	local o = b - a
+	local d = o:magnitude()
+	if p < d then
+		return a + p*o:unit()
+	else
+		return b
+	end
+end
+
+local function camanimcf(t, r, h, c)
+	return c*vec3.new(0, 0, -1/128*pi*cos(5*t)^3), vec3.new(0, h - r, 0) + c*vec3.new(0, 1/16*sin(10*t), 0)
+end
+
+local function doorcamanim(t)
+	local l = 2
+	t = t < l and t or l
+	local p = 1 - (l - t)/l
+	return 4*p*(1 - p)*vec3.new(-(1 - p)/6*sin(2*p*pi), -1/32*sin(p*pi), -1/32*sin(3*p*pi)^3)
+end
+
+local walkspeed = 5
+love.keypressed:Connect(function(key)
+	if key == "f" then
+		walkspeed = walkspeed == 5 and 15 or 5
+	end
+end)
+
+love.update:Connect(function(dt)
+	local keyd = love.keyboard.isDown("d") and 1 or 0
+	local keya = love.keyboard.isDown("a") and 1 or 0
+	local keyw = love.keyboard.isDown("w") and 1 or 0
+	local keys = love.keyboard.isDown("s") and 1 or 0
+	local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
+	
+	doorcamanimtime = doorcamanimtime + dt
+	
+	--print(mat3.fromaxisangle(vec3.new(0, camroty, 0)))
+	local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
+	controller0.v = constantlerp(controller0.v, baseorientation*inputvector*walkspeed, 6*walkspeed*dt)
+	controller.update(controller0, os.clock())
+	frametime = frametime + 1/5*dt*controller0.v:magnitude()
+	local walkanimangle, walkanimoff = camanimcf(frametime, controller0.r, eyeheight, controller0.v:magnitude()/walkspeed)
+	rot = baseorientation*mat3.fromaxisangle(walkanimangle + doorcamanim(doorcamanimtime))
+	pos = walkanimoff + controller0.p
+
+	--footstep audio
+	updater.update(stepupdater, frametime)
+	
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local lastt = love.timer.getTime()
 
 love.draw:Connect(function()
@@ -488,7 +636,7 @@ love.draw:Connect(function()
 
 	local t = love.timer.getTime()--tick()
 	local dt = t - lastt
-	local rot = mat3.fromeuleryxz(angy, angx, 0)
+	--local rot = mat3.fromeuleryxz(angy, angx, 0)
 
 	--flashlight
 	do
