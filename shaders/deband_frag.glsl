@@ -2,6 +2,8 @@
 //THIS RENDERS TO THE SCREEN
 //WE USE Y-INVERTED COORDINATES
 
+uniform float scary;
+
 uniform Image finalcanvas;
 uniform vec2 screendim;
 
@@ -56,29 +58,7 @@ vec3 getdeband(vec2 fragcoord) {
 const int chromaiter  = 4;
 const float chromalen = 32.0;
 
-vec3 calcchroma(vec2 coord) {
-	vec2 texcoord = coord/screendim;
-	vec2 centoff = 1.0 - 2.0*texcoord;
 
-	vec2 blend = chromalen*centoff;
-
-	vec3 basecolor = getbasecolor(love_PixelCoord);
-	basecolor.r = getbasecolor(love_PixelCoord - 32*centoff).r;
-
-	vec3 sum = vec3(0, 0, 0);
-	for (int i = 0; i < chromaiter; ++i) {
-		float mul = i/(chromaiter - 1);
-		vec2 curtex = texcoord + mul*centoff;
-		vec2 curfrag = screendim*curtex;
-		sum += getbasecolor(curfrag);
-		//vec2 texcoord = 1 - 2*
-		//vec2 coord = 0.5*(othercentoff - 1.0)*screendim;
-
-		//sum += getbasecolor(love_PixelCoord);
-	}
-	
-	return sum;
-}
 */
 
 
@@ -116,6 +96,27 @@ vec3 calcchroma(vec2 fragcoord) {
 
 
 
+vec3 calcscary(vec2 fragcoord) {
+	vec2 texcoord = fragcoord/screendim;
+	vec2 centoff = 1.0 - 2.0*texcoord;
+
+	vec3 sum = vec3(0, 0, 0);
+	for (int i = 0; i < chromaiter; ++i) {
+		float mul = 4*chromalen*i/(chromaiter - 1);
+		vec2 curtex = texcoord + mul*centoff;
+		vec2 curfrag = screendim*curtex;
+		sum += getbasecolor(curfrag)*vec3(1, 0.2, 0.2);
+	}
+
+	vec3 final = sum/chromaiter;
+
+	return final;
+}
+
+
+
+
+
 //grain "module"
 const float grainfrequency = 512.0;
 const float graincoef      = 1.0/24.0;
@@ -129,7 +130,8 @@ vec3 calcgrain(vec2 fragcoord) {
 
 
 void effect() {
-	vec3 basecolor   = calcchroma(love_PixelCoord);
+	vec3 basecolor = calcchroma(love_PixelCoord);
+	if (scary > 0) basecolor = mix(basecolor, calcscary(love_PixelCoord), scary);
 	vec3 mappedcolor = filmicToneMapping(basecolor);
 	vec3 noise       = getdeband(love_PixelCoord);
 	vec3 grain       = calcgrain(love_PixelCoord);

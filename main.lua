@@ -1,11 +1,9 @@
-require("lovlox/main")
-
 io.stdout:setvbuf("no")
 
 local cos = math.cos
 local sin = math.sin
 
-local lovlox  = require("lovlox/Main")
+local lovlox  = require("lovlox/main")
 local mat3    = require("algebra/mat3")
 local vec3    = require("algebra/vec3")
 local quat    = require("algebra/quat")
@@ -123,6 +121,8 @@ local newlight = light.new
 --for the sake of my battery life
 --love.window.setVSync(false)
 
+local scaryvalue = 0
+
 local animtex = love.graphics.newImage("woah.png")
 
 local wut = 1
@@ -185,6 +185,7 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	end
 	debandshader:send("screendim", {w, h})
 	debandshader:send("finalcanvas", compbuffer[1])
+	debandshader:send("scary", scaryvalue)
 	love.graphics.setCanvas()
 	--love.graphics.setShader()
 	love.graphics.draw(compbuffer[1])--just straight up color
@@ -578,12 +579,27 @@ local function doorcamanim(t)
 	return 4*p*(1 - p)*vec3.new(-(1 - p)/6*sin(2*p*pi), -1/32*sin(p*pi), -1/32*sin(3*p*pi)^3)
 end
 
+local redsource = love.audio.newSource("audio/red.mp3", "stream")
+redsource:setLooping(true)
+redsource:play()
+
 local walkspeed = 5
 love.keypressed:Connect(function(key)
 	if key == "f" then
 		walkspeed = walkspeed == 5 and 15 or 5
 	end
 end)
+
+local function lininterp(a, b, t)
+	local o = b - a
+	local u = o < 0 and -1 or o > 0 and 1 or 0
+	local d = (o*o)^(1/2)
+	if t < d then
+		return a + t*u
+	else
+		return b
+	end
+end
 
 love.update:Connect(function(dt)
 	local keyd = love.keyboard.isDown("d") and 1 or 0
@@ -593,7 +609,10 @@ love.update:Connect(function(dt)
 	local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
 	
 	doorcamanimtime = doorcamanimtime + dt
-	
+
+	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
+	redsource:setVolume(scaryvalue)
+
 	--print(mat3.fromaxisangle(vec3.new(0, camroty, 0)))
 	local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
 	controller0.v = constantlerp(controller0.v, baseorientation*inputvector*walkspeed, 6*walkspeed*dt)
