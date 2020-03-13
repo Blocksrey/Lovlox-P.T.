@@ -231,6 +231,7 @@ love.keypressed:Connect(function(k)
 	end
 end)
 
+--[[
 local yoooo = -48
 love.wheelmoved:Connect(function(x, y)
 	if y > 0 then
@@ -242,6 +243,7 @@ love.wheelmoved:Connect(function(x, y)
 		lights[i].setalpha(2^(yoooo/8))
 	end
 end)
+]]
 
 local function clamp(p, a, b)
 	return p < a and a or p > b and b or p
@@ -328,14 +330,39 @@ end
 
 --lights
 for index = 1, #testmodel.light do
-	lights[index] = newlight()
-	lights[index].setpos(testmodel.light[index][1])
-	lights[index].setalpha(1/256/testmodel.light[index][2]:magnitude()/testmodel.light[index][4])
-	lights[index].setcolor(10*testmodel.light[index][3])
+	--lights[index] = newlight()
+	--lights[index].setpos(testmodel.light[index][1])
+	--lights[index].setalpha(1/256/testmodel.light[index][2]:magnitude()/testmodel.light[index][4])
+	--lights[index].setcolor(10*testmodel.light[index][3])
 end
 
+
+local acos = math.acos
+
+local E = math.exp(1)
+
+local function springsphere(p0, p1, v, e, s, x)
+	x = s*x
+	p0, p1 = p0:unit(), p1:unit()
+	local co = cos(x)
+	local si = sin(x)
+	local k = E^(x - x/e)
+	local p01 = p0:dot(p1)
+	local t = acos(p01 < 1 and p01 or 1)
+	local o = t*p1:cross(p0):unit()
+	--local o=t*norm(cross(p1,p0))
+	--return faa(k*(o*co+v*si))*norm(p1),k*(v*co-o*si)
+	return
+		mat3.fromaxisangle(k*(o*co + v*si))*p1,
+		k*(v*co - o*si)
+end
+
+
+local flashlightdirection = vec3.new(0, 0, 1)
+local flashlightdirectionvelocity = vec3.null
+
 local flashlight = newlight()
-flashlight.setalpha(1/64)
+flashlight.setalpha(1/256)
 flashlight.setcolor(vec3.new(4, 5, 6))
 lights[#lights + 1] = flashlight
 
@@ -578,6 +605,16 @@ love.update:Connect(function(dt)
 	collider0.update()
 	print(collider0.position)
 
+	do
+		local lookdir = rot*vec3.new(0, 0, 1)
+		flashlightdirection, flashlightdirectionvelocity = springsphere(flashlightdirection, lookdir, flashlightdirectionvelocity, 0.55, 6, dt)
+		local tpos = pos + rot*vec3.new(1/2, -1, 3/2)
+		local lpos = flashlight.getpos()
+		local dpos = lpos - tpos
+		flashlight.setpos(tpos + 0.01^dt*dpos)
+		--flashlight.setpos(pos)
+	end
+
 	doorcamanimtime = doorcamanimtime + dt
 
 	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
@@ -620,12 +657,7 @@ love.draw:Connect(function()
 	local dt = t - lastt
 
 	--flashlight
-	do
-		local tpos = pos + rot*vec3.new(1/2, -1, 3/2)
-		local lpos = flashlight.getpos()
-		local dpos = lpos - tpos
-		flashlight.setpos(tpos + 0.01^dt*dpos)
-	end
+	lightshader:send("lightdir", {flashlightdirection:dump()})
 
 	drawmeshes(1, near, far, pos, rot, meshes, lights)
 

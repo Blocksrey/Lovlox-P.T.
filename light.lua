@@ -57,7 +57,7 @@ function light.new()
 	local pos = vec3.null
 	local changed = true
 
-	local alpha = 1/2--1/256
+	local alpha = 1/2
 	local vertT = {
 		0, 0, 0, 0,
 		0, 0, 0, 0,
