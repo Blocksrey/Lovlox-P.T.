@@ -1,8 +1,8 @@
-local Enum = require("lovlox/Enum")
+local enum = require("lovlox/globals/vars/Enum")
 
 local Material = {}
 
 Material.SmoothPlastic = "SmoothPlastic"
 Material.Smooth        = "Smooth"
 
-Enum.Material = Material
+enum.Material = Material

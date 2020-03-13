@@ -17,7 +17,9 @@ local function new(x, y, z)
 	local v = old(x, y, z)
 	local x, y, z = v.x, v.y, v.z
 	v.magnitude = (x*x + y*y + z*z)^(1/2)
+	v.Magnitude = v.magnitude
 	v.unit = old(x/v.magnitude, y/v.magnitude, z/v.magnitude)
+	v.Unit = v.unit
 	return v
 end
 
@@ -70,7 +72,7 @@ function meta.__unm(self)
 end
 
 function meta.__tostring(self)
-	return self.x.." "..self.y.." "..self.z
+	return self.x..", "..self.y..", "..self.z
 end
 
 local Vector3 = {}

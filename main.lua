@@ -3,14 +3,16 @@ io.stdout:setvbuf("no")
 local cos = math.cos
 local sin = math.sin
 
+local pi = math.pi
+
 local lovlox   = require("lovlox/main")
 local mat3     = require("algebra/mat3")
 local vec3     = require("algebra/vec3")
 local quat     = require("algebra/quat")
 local rand     = require("random")
 local light    = require("light")
-local object   = require("object")
-local Signal   = require("lovlox/Signal")
+local lovemesh = require("lovemesh")
+local Signal   = require("lovlox/types/RBXScriptSignal")
 local collider = require("collider")
 
 --load in the geometry shader and compositing shader
@@ -18,7 +20,6 @@ local geomshader   = love.graphics.newShader("shaders/geom_frag.glsl", "shaders/
 local lightshader  = love.graphics.newShader("shaders/light_frag.glsl", "shaders/light_vert.glsl")
 local compshader   = love.graphics.newShader("shaders/comp_frag.glsl")
 local debandshader = love.graphics.newShader("shaders/deband_frag.glsl")
---local vhsshader    = love.graphics.newShader("shaders/vhs_frag.glsl", "shaders/vhs_vert.glsl")
 
 --make signals
 love.mousefocus = Signal.new()
@@ -31,8 +32,6 @@ love.draw       = Signal.new()
 love.resize     = Signal.new()
 
 local overlay = require("overlay")
-
-local randomsampler = rand.newsampler(256, 256, rand.triangular4)
 
 --make the buffers
 local geombuffer
@@ -114,15 +113,17 @@ local function getfrusT(ratio, height, near, far, pos, rot)
 end
 
 
-local newtet = object.newtetrahedron
-local newbox = object.newbox
-local newsphere = object.newsphere
+local newtet = lovemesh.newtetrahedron
+local newbox = lovemesh.newbox
+local newsphere = lovemesh.newsphere
 local newlight = light.new
 
 --for the sake of my battery life
 --love.window.setVSync(false)
 
 local scaryvalue = 0
+
+local randomsampler = rand.newsampler(256, 256, rand.triangular4)
 
 local wut = 1
 local shadow = 0
@@ -246,36 +247,10 @@ local function clamp(p, a, b)
 	return p < a and a or p > b and b or p
 end
 
-local pi = math.pi
-
 love.mousemoved:Connect(function(px, py, dx, dy)
 	angy = angy + sens*dx
 	angx = angx + sens*dy
 	angx = clamp(angx, -pi/2, pi/2)
-end)
-
-love.update:Connect(function(dt)
-	love.mouse.setRelativeMode(focused and mousefocused)
-	
-	local mul = speed
-	if love.keyboard.isDown("lshift") then
-		mul = 8*mul
-	end
-	if love.keyboard.isDown("lctrl") then
-		mul = mul/8
-	end
-
-	--local rot = mat3.fromeuleryxz(angy, angx, 0)
-
-	local keyd = love.keyboard.isDown("d") and 1 or 0
-	local keya = love.keyboard.isDown("a") and 1 or 0
-	local keye = love.keyboard.isDown("e") and 1 or 0
-	local keyq = love.keyboard.isDown("q") and 1 or 0
-	local keyw = love.keyboard.isDown("w") and 1 or 0
-	local keys = love.keyboard.isDown("s") and 1 or 0
-
-	local vel = rot*vec3.new(keyd - keya, keye - keyq, keyw - keys):unit()
-	pos = pos + dt*mul*vel
 end)
 
 local testmodel = require("models/pt")
@@ -318,19 +293,19 @@ local function robloxinstancetomesh(robloxpart)
 	end
 
 	if shape == "Ball" then
-		local mesh = object.newsphere(color.x, color.y, color.z)
+		local mesh = lovemesh.newsphere(color.x, color.y, color.z)
 		mesh.setpos(position)
 		mesh.setrot(orientation)
 		mesh.setscale(size/2)
 		return mesh
 	elseif shape == "WedgePart" then
-		local mesh = object.newwedge(color.x, color.y, color.z)
+		local mesh = lovemesh.newwedge(color.x, color.y, color.z)
 		mesh.setpos(position)
 		mesh.setrot(orientation)
 		mesh.setscale(size/2)
 		return mesh
 	else
-		local mesh = object.newbox(color.x, color.y, color.z)
+		local mesh = lovemesh.newbox(color.x, color.y, color.z)
 		mesh.setpos(position)
 		mesh.setrot(orientation)
 		mesh.setscale(size/2)
@@ -344,11 +319,11 @@ for index = 1, #testmodel.Part do
 end
 --wedgeparts
 for index = 1, #testmodel.WedgePart do
-	meshes[#meshes + 1] = robloxinstancetomesh(testmodel.WedgePart[index])
+	--meshes[#meshes + 1] = robloxinstancetomesh(testmodel.WedgePart[index])
 end
 --meshparts
 for index = 1, #testmodel.MeshPart do
-	meshes[#meshes + 1] = robloxinstancetomesh(testmodel.MeshPart[index])
+	--meshes[#meshes + 1] = robloxinstancetomesh(testmodel.MeshPart[index])
 end
 
 --lights
@@ -364,23 +339,29 @@ flashlight.setalpha(1/64)
 flashlight.setcolor(vec3.new(4, 5, 6))
 lights[#lights + 1] = flashlight
 
---[[
---local randomoffset = {}
-for i = 1, 32 do
-	lights[i] = newlight()
-	lights[i].setpos(vec3.new(
-		(math.random() - 1/2)*64,
-		(math.random())*25,
-		(math.random() - 1/2)*64
-	))
-	lights[i].setcolor(vec3.new(
-		math.random()*10,
-		math.random()*10,
-		math.random()*10
-	))
-	lights[i].setalpha(1/64)
+
+
+local world = require("lovlox/world")
+
+local function handlenewrobloxinstance(instance)
+	local index = #meshes + 1
+	meshes[index] = robloxinstancetomesh(instance)
+	instance.Changed:Connect(function()
+		meshes[index] = robloxinstancetomesh(instance)
+	end)
 end
-]]
+
+--handle current parts
+for index, value in next, world.parts do
+	handlenewrobloxinstance(value)
+end
+--now handle new parts
+world.partadded:Connect(handlenewrobloxinstance)
+
+
+
+
+
 
 
 
@@ -394,13 +375,11 @@ end
 
 
 --[[
-
---main_rigidbody
 game:GetService("ReplicatedFirst"):RemoveDefaultLoadingScreen()
 
 --modules
 local rigidbody = require("rigidbody")
-local interval  = require("interval")
+local intervalrb  = require("intervalrb")
 
 --localized
 local v3       = Vector3.new
@@ -444,72 +423,25 @@ local function updatephysics(t)
 end
 
 --sub-frame physics stepping (for accuracy)
-local physicsinterval = interval.new({
+local physicsinterval = intervalrb.new({
 	t = tick();
 	i = 2^-10;
 	f = updatephysics;
 })
 
-local head = game:GetService("Players").LocalPlayer.Character:WaitForChild("Head")
+local cframe = require("cframe")
 
-game:GetService("RunService").RenderStepped:Connect(function()
+game:GetService("RunService").RenderStepped:Connect(function(dt)
 	local t1 = tick()
 	--sub-frame update
-	interval.update(physicsinterval, t1)
+	intervalrb.update(physicsinterval, t1)
 	--current frame update
 	rigidbody.update(rigidbody0, t1)
 	--render
 	part.Size   = v3(sx, sy, sz)
 	part.CFrame = rigidbody0.o*cf(px, py, pz) + rigidbody0.x
 end)
-
-return nil
-
-
-]]
-
-local world = require("lovlox/world")
-
---[[
-local function parserobloxinstance(part)
-	local m = part.CFrame
-	local s = part.Size
-	local c = part.Color
-
-	local px, py, pz, xx, yx, zx, xy, yy, zy, xz, yz, zz = m:components()
-	local sx, sy, sz = s.x, s.y, s.z
-	local cr, cg, cb = c.r, c.g, c.b
-
-	--print()
-	--print(px, py, pz)
-	--print(sx, sy, sz)
-	--print(xx, yx, zx, xy, yy, zy, xz, yz, zz)
-	--print(cr, cg, cb)
-
-	return blocktomesh({
-		vec3.new(px, py, pz);
-		mat3.new(xx, yx, zx, xy, yy, zy, xz, yz, zz);
-		vec3.new(sx, sy, sz);
-		vec3.new(cr, cg, cb);
-	})
-end
-]]
-
-local function handlenewrobloxinstance(instance)
-	local index = #meshes + 1
-	meshes[index] = robloxinstancetomesh(instance)
-	instance.Changed:Connect(function()
-		meshes[index] = robloxinstancetomesh(instance)
-	end)
-end
-
-world.partadded:Connect(handlenewrobloxinstance)
-
-for index, value in next, world.parts do
-	handlenewrobloxinstance(value)
-end
-
-
+--]]
 
 
 
@@ -540,7 +472,7 @@ end
 
 
 local controller = require("controller")
-local updater    = require("updater")
+local interval   = require("interval")
 
 --constants
 local pi = math.pi
@@ -561,7 +493,6 @@ end
 
 local doorcamanimtime = 0
 
-
 local footstepsources = {
 	love.audio.newSource("audio/wood_boot_1.mp3", "static");
 	love.audio.newSource("audio/wood_boot_2.mp3", "static");
@@ -570,8 +501,8 @@ local footstepsources = {
 	love.audio.newSource("audio/wood_boot_5.mp3", "static");
 }
 
-local stepupdater = updater.new({i = 1/5*pi, v = 1/10*pi})
-stepupdater.f = function(t)
+local stepinterval = interval.new({i = 1/5*pi, v = 1/10*pi})
+stepinterval.f = function(t)
 	local source = tabrand(footstepsources)
 	source:stop()
 	source:play()
@@ -634,6 +565,10 @@ end
 local collider0 = collider.new({})
 
 love.update:Connect(function(dt)
+	love.mouse.setRelativeMode(focused and mousefocused)
+
+	lovlox.update(tick(), dt)
+
 	local keyd = love.keyboard.isDown("d") and 1 or 0
 	local keya = love.keyboard.isDown("a") and 1 or 0
 	local keyw = love.keyboard.isDown("w") and 1 or 0
@@ -641,7 +576,8 @@ love.update:Connect(function(dt)
 	local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
 
 	collider0.update()
-		
+	print(collider0.position)
+
 	doorcamanimtime = doorcamanimtime + dt
 
 	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
@@ -657,8 +593,7 @@ love.update:Connect(function(dt)
 	pos = walkanimoff + controller0.p
 
 	--footstep audio
-	updater.update(stepupdater, frametime)
-	
+	interval.update(stepinterval, frametime)
 end)
 
 
@@ -683,7 +618,6 @@ love.draw:Connect(function()
 
 	local t = love.timer.getTime()--tick()
 	local dt = t - lastt
-	--local rot = mat3.fromeuleryxz(angy, angx, 0)
 
 	--flashlight
 	do
@@ -691,10 +625,6 @@ love.draw:Connect(function()
 		local lpos = flashlight.getpos()
 		local dpos = lpos - tpos
 		flashlight.setpos(tpos + 0.01^dt*dpos)
-	end
-
-	for index, value in next, world.parts do
-		value.CFrame = CFrame.new(math.sin(os.clock()), math.cos(os.clock()*3), 0)*CFrame.Angles(os.clock(), 1/4*os.clock(), -3/8*os.clock())
 	end
 
 	drawmeshes(1, near, far, pos, rot, meshes, lights)

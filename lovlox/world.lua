@@ -1,11 +1,11 @@
-local Signal = require("lovlox/Signal")
-
+local signal = require("lovlox/types/RBXScriptsignal")
+local vector3 = require("lovlox/types/Vector3")
 
 local world = {}
 
 world.parts = {}
 
-world.partadded = Signal.new()
+world.partadded = signal.new()
 
 function world.newpart(part)
 	local index = #world.parts + 1
@@ -63,7 +63,7 @@ end
 local function rectoidfrompart(part)
 	local p  = part.CFrame.Position
 	local ss = part.Size.Magnitude
-	local s  = Vector3.new(ss, ss, ss)
+	local s  = vector3.new(ss, ss, ss)
 	return rectoid(p, s)
 end
 
@@ -72,7 +72,6 @@ local function findonregion(pos, siz)
 end
 
 world.partadded:Connect(function(part)
-	print("ASD")
 	table.insert(rectoids, rectoidfrompart(part))
 end)
 

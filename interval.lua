@@ -1,6 +1,6 @@
-local updater = {}
+local interval = {}
 
-function updater.new(table)
+function interval.new(table)
 	local self = {}
 	
 	--variables
@@ -14,7 +14,7 @@ function updater.new(table)
 	return self
 end
 
-function updater.update(self, t1)
+function interval.update(self, t1)
 	--variables
 	local t0 = self.t
 	local v0 = self.v
@@ -41,4 +41,4 @@ function updater.update(self, t1)
 	self.v = v1
 end
 
-return updater
+return interval

@@ -1,4 +1,4 @@
-local game = require("lovlox/game")
+local game = require("lovlox/globals/vars/game")
 
 game.ReplicatedFirst = {}
 

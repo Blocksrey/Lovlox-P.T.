@@ -1,4 +1,4 @@
-local Vector3 = require("lovlox/Vector3")
+local Vector3 = require("lovlox/types/Vector3")
 
 local cos   = math.cos
 local sin   = math.sin
@@ -74,6 +74,8 @@ end
 
 function meta.__mul(c1,c2)
 	if type(c1)=="table" and type(c2)=="table" and c1.type=="CFrame" and c2.type=="CFrame" then
+		--print(c1)
+		--print(c2)
 		local ax,ay,az,axx,ayx,azx,axy,ayy,azy,axz,ayz,azz=c1:components()
 		local bx,by,bz,bxx,byx,bzx,bxy,byy,bzy,bxz,byz,bzz=c2:components()
 		return new(
@@ -92,7 +94,7 @@ function meta.__mul(c1,c2)
 			if type(c1)=="table" and c1.type=="CFrame" then
 				error("Unexpected value near \"*\" at second argument: "..tostring(c2))
 			else
-				error("Unexpected value near \"*\" at first argument: "..tostring(c1))
+				--error("Unexpected value near \"*\" at first argument: "..tostring(c1))
 			end
 		end
 		return Vector3.new(ax+v3.x*axx+v3.y*ayx+v3.z*azx,ay+v3.x*axy+v3.y*ayy+v3.z*azy,az+v3.x*axz+v3.y*ayz+v3.z*azz)
@@ -222,14 +224,19 @@ CFrame.Angles=function(x,y,z)
 end
 CFrame.fromEulerAnglesXYZ=CFrame.Angles
 
-CFrame.fromAxisAngle=function(u,t)--source: http://en.wikipedia.org/wiki/Rotation_matrix
-	local st,cs=sin(t),cos(t)
-	local c1=1-ct
-	return new(0,0,0,
-	ct+u.x^2*c1,u.x*u.y*c1-u.z*st,u.x*u.z*c1+u.y*st,
-	u.y*u.x*c1+u.z*st,ct+u.y^2*c1,u.y*u.z*c1-u.x*st,
-	u.z*u.x*c1-u.y*st,u.z*u.y*c1+u.x*st,ct+u.z^2*c1)
+function CFrame.fromAxisAngle(u, a)
+	u = u.Unit
+	local x, y, z = u.x, u.y, u.z
+	local c = cos(a)
+	local s = sin(a)
+	local t = 1 - c
+	return new(0, 0, 0,
+		t*x*x + c  , t*x*y - z*s   , t*x*z + y*s,
+		t*x*y + z*s,  	t*y*y + c  , t*y*z - x*s,
+		t*x*z - y*s,  	t*y*z + x*s, t*z*z + c
+	)
 end
+
 
 CFrame.new = new
 

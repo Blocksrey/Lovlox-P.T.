@@ -5,12 +5,13 @@ function meta.Disconnect(self)
 	self.func = nil
 end
 
-local Event = {}
+local Connection = {}
 
-function Event.new(func)
+function Connection.new(func)
 	local self = {}
 	self.func = func
-	return setmetatable(self, meta)
+	setmetatable(self, meta)
+	return self
 end
 
-return Event
+return Connection

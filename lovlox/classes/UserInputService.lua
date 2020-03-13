@@ -1,5 +1,5 @@
-local game   = require("lovlox/game")
-local Signal = require("lovlox/Signal")
+local game = require("lovlox/globals/vars/game")
+local Signal = require("lovlox/types/RBXScriptSignal")
 
 local meta = {}
 meta.__index = meta
@@ -17,3 +17,5 @@ service.InputEnded   = Signal.new()
 game.UserInputService = service
 
 setmetatable(service, meta)
+
+return service

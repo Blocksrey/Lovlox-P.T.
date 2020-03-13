@@ -1,7 +1,7 @@
-local Enum = require("lovlox/Enum")
+local enum = require("lovlox/globals/vars/Enum")
 
 local SurfaceType = {}
 
 SurfaceType.Smooth = "SurfaceSmooth"
 
-Enum.SurfaceType = SurfaceType
+enum.SurfaceType = SurfaceType

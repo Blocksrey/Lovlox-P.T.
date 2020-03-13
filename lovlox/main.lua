@@ -1,29 +1,26 @@
---global scope stuff
-game      = require("lovlox/game")
-Vector3   = require("lovlox/Vector3")
-Color3    = require("lovlox/Color3")
-CFrame    = require("lovlox/CFrame")
-Instance  = require("lovlox/Instance")
-Enum      = require("lovlox/Enum")
-Ray       = require("lovlox/Ray")
-tick      = require("lovlox/tick")
-workspace = require("lovlox/workspace")
-Region3   = require("lovlox/Region3")
+--globals/funcs
+tick      = require("lovlox/globals/funcs/tick")
+--globals/vars
+Enum      = require("lovlox/globals/vars/Enum")
+--enums
+require("lovlox/enums/KeyCode")
+require("lovlox/enums/Material")
+require("lovlox/enums/PartType")
+require("lovlox/enums/SurfaceType")
+game      = require("lovlox/globals/vars/game")
+workspace = require("lovlox/globals/vars/workspace")
+--types
+CFrame    = require("lovlox/types/CFrame")
+Color3    = require("lovlox/types/Color3")
+Instance  = require("lovlox/types/Instance")
+Ray       = require("lovlox/types/Ray")
+Region3   = require("lovlox/types/Region3")
+Vector3   = require("lovlox/types/Vector3")
 
-print(workspace.FindPartOnRayWithIgnoreList)
-
---service instances
-require("lovlox/Services/ReplicatedFirst")
-require("lovlox/Services/RunService")
-require("lovlox/Services/UserInputService")
-
-require("lovlox/Service")
-
---enumerators
-require("lovlox/Enums/KeyCode")
-require("lovlox/Enums/Material")
-require("lovlox/Enums/PartType")
-require("lovlox/Enums/SurfaceType")
+--classes
+require("lovlox/classes/ReplicatedFirst")
+require("lovlox/classes/RunService")
+require("lovlox/classes/UserInputService")
 
 function _G.load(name)
 	local find = require("lovlox/test/"..name)
@@ -40,7 +37,11 @@ require("lovlox/test/main")
 
 local lovlox = {}
 
-function lovlox.update(t1)
+local runserv = game:GetService("RunService")
+local renderstepped = runserv.RenderStepped
+
+function lovlox.update(t1, dt)
+	renderstepped(dt)
 end
 
 function lovlox.render(meshes)

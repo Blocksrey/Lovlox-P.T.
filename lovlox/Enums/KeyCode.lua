@@ -1,7 +1,7 @@
-local Enum = require("lovlox/Enum")
+local enum = require("lovlox/globals/vars/Enum")
 
 local KeyCode = {}
 
 KeyCode.A = "a"
 
-Enum.KeyCode = KeyCode
+enum.KeyCode = KeyCode
