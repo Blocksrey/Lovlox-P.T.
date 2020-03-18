@@ -5,6 +5,19 @@ local sin = math.sin
 
 local pi = math.pi
 
+--make signals
+local Signal   = require("lovlox/types/RBXScriptSignal")
+love.mousefocus    = Signal.new()
+love.focus         = Signal.new()
+love.keypressed    = Signal.new()
+love.wheelmoved    = Signal.new()
+love.mousemoved    = Signal.new()
+love.update        = Signal.new()
+love.draw          = Signal.new()
+love.resize        = Signal.new()
+love.mousepressed  = Signal.new()
+love.mousereleased = Signal.new()
+
 local lovlox   = require("lovlox/main")
 local mat3     = require("algebra/mat3")
 local vec3     = require("algebra/vec3")
@@ -12,24 +25,14 @@ local quat     = require("algebra/quat")
 local rand     = require("random")
 local light    = require("light")
 local lovemesh = require("lovemesh")
-local Signal   = require("lovlox/types/RBXScriptSignal")
 local collider = require("collider")
+local bouncer  = require("bouncer")
 
 --load in the geometry shader and compositing shader
 local geomshader   = love.graphics.newShader("shaders/geom_frag.glsl", "shaders/geom_vert.glsl")
 local lightshader  = love.graphics.newShader("shaders/light_frag.glsl", "shaders/light_vert.glsl")
 local compshader   = love.graphics.newShader("shaders/comp_frag.glsl")
 local debandshader = love.graphics.newShader("shaders/deband_frag.glsl")
-
---make signals
-love.mousefocus = Signal.new()
-love.focus      = Signal.new()
-love.keypressed = Signal.new()
-love.wheelmoved = Signal.new()
-love.mousemoved = Signal.new()
-love.update     = Signal.new()
-love.draw       = Signal.new()
-love.resize     = Signal.new()
 
 local overlay = require("overlay")
 
@@ -118,15 +121,11 @@ local newbox = lovemesh.newbox
 local newsphere = lovemesh.newsphere
 local newlight = light.new
 
---for the sake of my battery life
---love.window.setVSync(false)
-
 local scaryvalue = 0
 
 local randomsampler = rand.newsampler(256, 256, rand.triangular4)
 
 local wut = 1
-local shadow = 0
 local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	local w, h = love.graphics.getDimensions()
 	local frusT = getfrusT(w/h, height, near, far, pos, rot)
@@ -166,7 +165,6 @@ local function drawmeshes(height, near, far, pos, rot, meshes, lights)
 	lightshader:send("wverts", geombuffer[1])
 	lightshader:send("wnorms", geombuffer[2])
 	lightshader:send("colors", geombuffer[3])
-	lightshader:send("shadow", shadow)
 	for i = 1, #lights do
 		local mesh, vertT, color = lights[i].getdrawdata()
 		lightshader:send("vertT", vertT)
@@ -209,7 +207,8 @@ local lights = {}
 
 local near = 1/10
 local far = 5000
-local pos = vec3.new(-19, 7, -20)
+local cameraposition    = vec3.new(-19, 7, -20)
+local cameraorientation = mat3.identity
 local rot = mat3.identity
 local angy = 0
 local angx = 0
@@ -221,8 +220,6 @@ love.keypressed:Connect(function(k)
 		love.event.quit()
 	elseif k == "r" then
 		wut = 1 - wut
-	elseif k == "t" then
-		shadow = 1 - shadow
 	elseif k == "f11" then
 		love.window.setFullscreen(not love.window.getFullscreen())
 		love.resize()
@@ -350,8 +347,6 @@ local function springsphere(p0, p1, v, e, s, x)
 	local p01 = p0:dot(p1)
 	local t = acos(p01 < 1 and p01 or 1)
 	local o = t*p1:cross(p0):unit()
-	--local o=t*norm(cross(p1,p0))
-	--return faa(k*(o*co+v*si))*norm(p1),k*(v*co-o*si)
 	return
 		mat3.fromaxisangle(k*(o*co + v*si))*p1,
 		k*(v*co - o*si)
@@ -361,16 +356,16 @@ end
 local flashlightdirection = vec3.new(0, 0, 1)
 local flashlightdirectionvelocity = vec3.null
 
-local flashlight = newlight()
-flashlight.setalpha(1/256)
-flashlight.setcolor(vec3.new(4, 5, 6))
-lights[#lights + 1] = flashlight
+local flashlightlight = newlight()
+flashlightlight.setalpha(1/256)
+flashlightlight.setcolor(vec3.new(4, 5, 6))
+lights[#lights + 1] = flashlightlight
 
 
 
-local world = require("lovlox/world")
+local workspace = require("lovlox/globals/vars/workspace")
 
-local function handlenewrobloxinstance(instance)
+local function handlenewrobloxbody(instance)
 	local index = #meshes + 1
 	meshes[index] = robloxinstancetomesh(instance)
 	instance.Changed:Connect(function()
@@ -379,15 +374,11 @@ local function handlenewrobloxinstance(instance)
 end
 
 --handle current parts
-for index, value in next, world.parts do
-	handlenewrobloxinstance(value)
+for index, value in next, workspace.bodies do
+	--print(value)
 end
 --now handle new parts
-world.partadded:Connect(handlenewrobloxinstance)
-
-
-
-
+workspace.bodyadded:Connect(handlenewrobloxbody)
 
 
 
@@ -439,7 +430,7 @@ end
 
 local rigidbody0 = rigidbody.new({
 	t     = tick();
-	x     = v3(0, 4, 0);
+	x     = v3(0, 0, 0);
 	omega = v3(2, 0.1, -0.1);
 	m     = mass;
 	I     = rectmoment(px, py, pz, sx, sy, sz, mass);
@@ -478,55 +469,144 @@ end)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local controller = require("controller")
-local interval   = require("interval")
-
---constants
-local pi = math.pi
-local E  = math.exp(1)
-
-local controller0 = controller.new({
-	--variable
-	t = os.clock();
-	p = pos;
-	--constant
-	a = vec3.new(0, 0, 0);
-	r = 1;
-})
-
 local function tabrand(table)
 	return table[math.random(1, #table)]
 end
 
+love.audio.setEffect("branchequal", {
+	type             = "equalizer";
+	lowgain          = 1;
+	lowcut           = 0;
+	lowmidgain       = 1;
+	lowmidfrequency  = 0;
+	lowmidbandwidth  = 1;
+	highmidgain      = 0;
+	highmidfrequency = 0;
+	highmidbandwidth = 0;
+	highgain         = 0;
+	highcut          = 0;
+})
+
+love.audio.setEffect("branchreverb", {
+	type           = "reverb";
+	gain           = 1;
+	highgain       = 1;
+	density        = 1;
+	diffusion      = 1;
+	decaytime      = 3;
+	decayhighratio = 0;
+	earlygain      = 1;
+	earlydelay     = 2;
+	lategain       = 1;
+	latedelay      = 2;
+	roomrolloff    = 0;
+	airabsorption  = 1;
+	highlimit      = false;
+})
+
+local br = love.audio.getEffect("branchreverb")
+br.decaytime = 200;
+love.audio.setEffect("branchreverbs", br)
+
+local branchsources = {
+	love.audio.newSource("audio/branch1.wav", "static");
+	love.audio.newSource("audio/branch2.wav", "static");
+	love.audio.newSource("audio/branch3.wav", "static");
+	love.audio.newSource("audio/branch4.wav", "static");
+	love.audio.newSource("audio/branch5.wav", "static");
+	love.audio.newSource("audio/branch6.wav", "static");
+	love.audio.newSource("audio/treefall1.wav", "static");
+	love.audio.newSource("audio/treefall2.wav", "static");
+	love.audio.newSource("audio/treefall3.wav", "static");
+	love.audio.newSource("audio/thinkdifferent.wav", "stream");
+}
+
+for i, v in next, branchsources do
+	v:setEffect("branchreverb")
+	--v:setEffect("branchreverb")
+end
+
+effects = love.audio.getActiveEffects()
+--print(#effects)
+
+local function playbranch()
+	local theta = 0.2*2*pi*(1/2 - math.random())
+	local c = cos(theta)
+	local s = sin(theta)
+	local sound = tabrand(branchsources)
+	sound:setPosition(64*s, 0, 64*c)
+	sound:play()
+end
+
+love.keypressed:Connect(function(key)
+	if key == "e" then
+		playbranch()
+	end
+end)
+
+
+local frametime = 0
+
+local eyeheight        = 11/2 + 6
+local mousecoefficient = 1/128
+
+
+local interval   = require("interval")
+
+
+
+
+
+
+
+
+
+--reverb stuff
+love.audio.setEffect("reverb", {
+	type           = "reverb";
+	gain           = 1;
+	highgain       = 1/3;
+	density        = 1;
+	diffusion      = 1;
+	decaytime      = 3/2;
+	decayhighratio = 1;
+	earlygain      = 1;
+	earlydelay     = 0;
+	lategain       = 1;
+	latedelay      = 0;
+	roomrolloff    = 0;
+	airabsorption  = 0;
+	highlimit      = false;
+})
+
+love.audio.setEffect("echo", {
+	type     = "echo";
+	feedback = 0.1;
+	tapdelay = 0.01;
+	spread   = 0.1;
+	damping  = 2;
+})
+
+love.audio.setDistanceModel("exponent")
+
+
 local doorcamanimtime = 0
 
 local footstepsources = {
-	love.audio.newSource("audio/wood_boot_1.mp3", "static");
-	love.audio.newSource("audio/wood_boot_2.mp3", "static");
-	love.audio.newSource("audio/wood_boot_3.mp3", "static");
-	love.audio.newSource("audio/wood_boot_4.mp3", "static");
-	love.audio.newSource("audio/wood_boot_5.mp3", "static");
+	love.audio.newSource("audio/wood_smart_1.mp3", "static");
+	love.audio.newSource("audio/wood_smart_2.mp3", "static");
+	love.audio.newSource("audio/wood_smart_3.mp3", "static");
+	love.audio.newSource("audio/wood_smart_4.mp3", "static");
+	love.audio.newSource("audio/wood_smart_5.mp3", "static");
 }
+
+for i = 1, #footstepsources do
+	footstepsources[i]:setEffect("reverb")
+	footstepsources[i]:setPosition(0, -eyeheight, 0)
+end
+
+
+local random = require("random")
 
 local stepinterval = interval.new({i = 1/5*pi, v = 1/10*pi})
 stepinterval.f = function(t)
@@ -534,11 +614,6 @@ stepinterval.f = function(t)
 	source:stop()
 	source:play()
 end
-
-local frametime = 0
-
-local eyeheight        = 11/2
-local mousecoefficient = 1/128
 
 
 
@@ -589,46 +664,174 @@ end
 
 
 
-local collider0 = collider.new({})
+
+
+
+
+local rustle = {}
+
+local rustlesources = {
+	love.audio.newSource("audio/longsoft01.mp3", "static");
+	love.audio.newSource("audio/longsoft02.mp3", "static");
+	love.audio.newSource("audio/longsoft03.mp3", "static");
+	love.audio.newSource("audio/longsoft04.mp3", "static");
+	love.audio.newSource("audio/longsoft05.mp3", "static");
+	love.audio.newSource("audio/longsoft06.mp3", "static");
+	love.audio.newSource("audio/longsoft07.mp3", "static");
+	love.audio.newSource("audio/longsoft08.mp3", "static");
+	love.audio.newSource("audio/longsoft09.mp3", "static");
+	love.audio.newSource("audio/longsoft10.mp3", "static");
+}
+
+for i = 1, #rustlesources do
+	rustlesources[i]:setEffect("reverb")
+end
+
+local rustlerate
+local rustleval           = 0
+local rustlevolumerestart = 1/4
+local rustlelastangx      = angx
+local rustlelastangy      = angy
+local rustlefromstart     = 1/4
+local rustlefromend       = 1/4
+
+local function rustlekeepgoingdesuka()
+	local timepos = rustlecurrentsource:tell()
+	return rustlecurrentsource:isPlaying() and timepos < rustlecurrentsource:getDuration() - rustlefromend and timepos > rustlefromstart
+end
+
+function rustle.update(dt)
+	local dx = angx - rustlelastangx
+	local dy = angy - rustlelastangy
+	local dd = (dx*dx + dy*dy)^(1/2)
+	if dd > 0 then
+		rustlerate = 1
+	else
+		rustlerate = 2
+	end
+	rustleval = lininterp(rustleval, dd, rustlerate*dt)
+
+	if rustlecurrentsource and not rustlekeepgoingdesuka() then
+		rustlecurrentsource = nil
+	end
+	if not rustlecurrentsource then 
+		rustlecurrentsource = tabrand(rustlesources)
+		rustlecurrentsource:play()
+		rustlecurrentsource:seek(rustlefromstart)
+	end
+	rustlecurrentsource:setVolume(1/2*(1 - (1 - rustleval)^2))
+
+	rustlelastangy = angy
+	rustlelastangx = angx
+end
+
+
+
+
+
+
+
+local rainsound = love.audio.newSource("audio/raininterior.mp3", "stream")
+
+rainsound:setEffect("reverb")
+rainsound:setVolume(1/16)
+--rainsound:setPosition(0, 0, 2)
+rainsound:setLooping(true)
+--rainsound:play()
+
+
+
+
+
+
+local noise = love.math.noise
+
+local collider0 = collider.new({
+	position = Vector3.new(-19, 2, -19);
+	radius = 1;
+	length = Vector3.new();
+})
+
+love.keypressed:Connect(function(key)
+	if key == "space" then
+		collider0.jump()
+	end
+end)
+
+local flashlight = require("flashlight")
+
+local flashlight0 = flashlight.new({})
+
+love.mousepressed:Connect(function(x, y, button)
+	if button == 1 then
+		local success = flashlight.press(flashlight0)
+		if success then
+			flashlightdirectionvelocity = flashlightdirectionvelocity + flashlightdirection:cross(cameraorientation*vec3.new(0, 1/16*(1 + math.random()), 0))
+		end
+	elseif button == 2 then
+		doorcamanimtime = 0
+	end
+end)
+
+love.mousereleased:Connect(function(x, y, button)
+	if button == 1 then
+		local success = flashlight.release(flashlight0)
+		if success then
+			flashlightdirectionvelocity = flashlightdirectionvelocity + flashlightdirection:cross(cameraorientation*vec3.new(0, -1/16*(1 + math.random()), 0))
+		end
+	end
+end)
+
+
+local p  = Instance.new("Part")
+p.CFrame = CFrame.new(0, 0, 0)
+p.Size   = Vector3.new(1000, 1, 1000)
+
+local function vector3tovec3(v3)
+	local x, y, z = v3.x, v3.y, v3.z
+	return vec3.new(x, y, z)
+end
+
+
+
+
+
+
 
 love.update:Connect(function(dt)
-	love.mouse.setRelativeMode(focused and mousefocused)
-
 	lovlox.update(tick(), dt)
 
+	love.mouse.setRelativeMode(focused and mousefocused)
 	local keyd = love.keyboard.isDown("d") and 1 or 0
 	local keya = love.keyboard.isDown("a") and 1 or 0
 	local keyw = love.keyboard.isDown("w") and 1 or 0
 	local keys = love.keyboard.isDown("s") and 1 or 0
 	local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
 
+	collider0.walkunit = Vector3.new((cameraorientation*inputvector):dump())
 	collider0.update()
-	print(collider0.position)
-
-	do
-		local lookdir = rot*vec3.new(0, 0, 1)
-		flashlightdirection, flashlightdirectionvelocity = springsphere(flashlightdirection, lookdir, flashlightdirectionvelocity, 0.55, 6, dt)
-		local tpos = pos + rot*vec3.new(1/2, -1, 3/2)
-		local lpos = flashlight.getpos()
-		local dpos = lpos - tpos
-		flashlight.setpos(tpos + 0.01^dt*dpos)
-		--flashlight.setpos(pos)
-	end
 
 	doorcamanimtime = doorcamanimtime + dt
+	local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
+	frametime = frametime + 1/5*dt*collider0.velocity.Magnitude
+	local walkanimangle, walkanimoff = camanimcf(frametime, collider0.radius, eyeheight, collider0.velocity.Magnitude/walkspeed)
+	cameraorientation = baseorientation*mat3.fromaxisangle(walkanimangle + doorcamanim(doorcamanimtime))*mat3.fromaxisangle(vec3.new(1/32*noise(1 - 1/7*tick() - 1, 1)^5, 1/32*noise(2 - 1/7*tick() - 1, 2)^5, 1/32*noise(3 - 1/7*tick() - 1, 3)^5))
+	cameraposition = walkanimoff + vector3tovec3(collider0.position)
+	
+	local tardir = cameraorientation*mat3.fromaxisangle(vec3.new(1/8*noise(1/4*tick() - 1, 1)^3 + 1/24*cos(5*frametime + pi/6)^24, 1/8*noise(1/4*tick() - 2, 2)^3, 1/8*noise(1/4*tick() - 3, 3)^3))*vec3.new(0, 0, 1)
+	flashlightdirection, flashlightdirectionvelocity = springsphere(flashlightdirection, tardir, flashlightdirectionvelocity, 0.55, 12, dt)
+	if flashlight0.enabled then
+		flashlightlight.setpos(cameraposition + cameraorientation*vec3.new(1/2, -1, 3/2))
+	else
+		flashlightlight.setpos(vec3.new(0, -10000, 0))
+	end
 
 	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
 	redsource:setVolume(scaryvalue)
 
-	--print(mat3.fromaxisangle(vec3.new(0, camroty, 0)))
-	local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
-	controller0.v = constantlerp(controller0.v, baseorientation*inputvector*walkspeed, 6*walkspeed*dt)
-	controller.update(controller0, os.clock())
-	frametime = frametime + 1/5*dt*controller0.v:magnitude()
-	local walkanimangle, walkanimoff = camanimcf(frametime, controller0.r, eyeheight, controller0.v:magnitude()/walkspeed)
-	rot = baseorientation*mat3.fromaxisangle(walkanimangle + doorcamanim(doorcamanimtime))
-	pos = walkanimoff + controller0.p
-
+	--audio
+	--rustle audio
+	rustle.update(dt)
 	--footstep audio
 	interval.update(stepinterval, frametime)
 end)
@@ -659,7 +862,7 @@ love.draw:Connect(function()
 	--flashlight
 	lightshader:send("lightdir", {flashlightdirection:dump()})
 
-	drawmeshes(1, near, far, pos, rot, meshes, lights)
+	drawmeshes(1, near, far, cameraposition, cameraorientation, meshes, lights)
 
 	lastt = t
 end)

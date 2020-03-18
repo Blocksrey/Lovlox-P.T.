@@ -1067,7 +1067,7 @@ function collider.new(options)
 	self.goallength = choose(options.goallength, self.length)
 	self.goalradius = choose(options.goalradius, self.radius)
 
-	self.position = choose(options.position, v3(0, 50, 0))
+	self.position = choose(options.position, v3(0, 10, 0))
 	self.velocity = choose(options.velocity, v3(0, 0, 0))
 	self.acceleration = choose(options.acceleration, v3(0, -32, 0))
 
@@ -1080,8 +1080,8 @@ function collider.new(options)
 	self.standtarget = choose(options.standtarget, 5)--4
 	self.standaccel = choose(options.standaccel, 200)
 
-	self.walkspeed = choose(options.walkspeed, 16)
-	self.jumpheight = choose(options.jumpheight, 3)
+	self.walkspeed = choose(options.walkspeed, 5)
+	self.jumpheight = choose(options.jumpheight, 1)
 	self.walkunit = choose(options.walkunit, v3(0, 0, 0))
 	self.walkaccel = choose(options.walkaccel, 200)
 	self.airaccel = choose(options.airaccel, self.walkaccel/4)

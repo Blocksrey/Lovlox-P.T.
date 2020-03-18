@@ -17,7 +17,6 @@ uniform vec3 lightdir;
 uniform Image wverts;
 uniform Image wnorms;
 uniform Image colors;
-uniform float shadow;
 
 float pi = 3.14159265359;
 
@@ -115,7 +114,7 @@ void effect(){
 
 		//float brightness = pointlightbrightness(vertT[0].x, vertT[3].xyz - wvert, wnorm);
 
-		float visible = screenraycast(64.0*shadow, wvert, vertT[3].xyz);
+		float visible = screenraycast(64.0, wvert, vertT[3].xyz);
 
 		//love_Canvases[0] = vec4(visible*brightness*lightcolor*color, 1.0);
 		love_Canvases[0] = vec4(visible*brightness*lightcolor*color, 1.0);

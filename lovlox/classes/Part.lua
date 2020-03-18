@@ -1,9 +1,9 @@
-local object  = require("lovlox/object")
-local world   = require("lovlox/world")
-local vector3 = require("lovlox/types/Vector3")
-local cframe  = require("lovlox/types/CFrame")
-local color3  = require("lovlox/types/Color3")
-local Enum    = require("lovlox/globals/vars/Enum")
+local object    = require("lovlox/object")
+local workspace = require("lovlox/globals/vars/workspace")
+local vector3   = require("lovlox/types/Vector3")
+local cframe    = require("lovlox/types/CFrame")
+local color3    = require("lovlox/types/Color3")
+local Enum      = require("lovlox/globals/vars/Enum")
 
 local part = {}
 
@@ -21,7 +21,7 @@ function part.new()
 
 	local self = object.new(props)
 
-	world.newpart(self)
+	workspace:newbody(self)
 	
 	return self
 end

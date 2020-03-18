@@ -39,6 +39,10 @@ local function getinheritedmeta()
 		end
 	end
 
+	function meta.FindFirstAncestor()
+		
+	end
+
 	function meta.__index(self, index)
 		return meta[index] or lookup[self][index] or self:FindFirstChild(index)
 	end
