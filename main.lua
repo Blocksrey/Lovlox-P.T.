@@ -1,12 +1,16 @@
 io.stdout:setvbuf("no")
 
-local cos = math.cos
-local sin = math.sin
+--functions
+local cos  = math.cos
+local sin  = math.sin
+local acos = math.acos
 
-local pi = math.pi
+--constants
+local pi = 3.14159265359
+local E  = 2.71828182846
 
 --make signals
-local Signal   = require("lovlox/types/RBXScriptSignal")
+local Signal       = require("lovlox/types/RBXScriptSignal")
 love.mousefocus    = Signal.new()
 love.focus         = Signal.new()
 love.keypressed    = Signal.new()
@@ -18,15 +22,24 @@ love.resize        = Signal.new()
 love.mousepressed  = Signal.new()
 love.mousereleased = Signal.new()
 
-local lovlox   = require("lovlox/main")
-local mat3     = require("algebra/mat3")
-local vec3     = require("algebra/vec3")
-local quat     = require("algebra/quat")
-local rand     = require("random")
-local light    = require("light")
-local lovemesh = require("lovemesh")
-local collider = require("collider")
-local bouncer  = require("bouncer")
+--modules main
+local lovlox       = require("lovlox/main")
+local mat3         = require("algebra/mat3")
+local vec3         = require("algebra/vec3")
+local quat         = require("algebra/quat")
+local rand         = require("random")
+local light        = require("light")
+local lovemesh     = require("lovemesh")
+local collider     = require("collider")
+local bouncer      = require("bouncer")
+local acoustics    = require("acoustics")
+local overlay      = require("overlay")
+local random       = require("random")
+local interval     = require("interval")
+local testmodel    = require("models/pt")
+local workspace    = require("lovlox/globals/vars/workspace")
+local flashlight   = require("flashlight")
+local soundhandler = require("soundhandler")
 
 --load in the geometry shader and compositing shader
 local geomshader   = love.graphics.newShader("shaders/geom_frag.glsl", "shaders/geom_vert.glsl")
@@ -34,7 +47,6 @@ local lightshader  = love.graphics.newShader("shaders/light_frag.glsl", "shaders
 local compshader   = love.graphics.newShader("shaders/comp_frag.glsl")
 local debandshader = love.graphics.newShader("shaders/deband_frag.glsl")
 
-local overlay = require("overlay")
 
 --make the buffers
 local geombuffer
@@ -200,8 +212,6 @@ end
 
 
 
-
-
 local meshes = {}
 local lights = {}
 
@@ -252,7 +262,6 @@ love.mousemoved:Connect(function(px, py, dx, dy)
 	angx = clamp(angx, -pi/2, pi/2)
 end)
 
-local testmodel = require("models/pt")
 
 local function robloxinstancetomesh(robloxpart)
 	local position
@@ -334,9 +343,7 @@ for index = 1, #testmodel.light do
 end
 
 
-local acos = math.acos
 
-local E = math.exp(1)
 
 local function springsphere(p0, p1, v, e, s, x)
 	x = s*x
@@ -363,8 +370,6 @@ lights[#lights + 1] = flashlightlight
 
 
 
-local workspace = require("lovlox/globals/vars/workspace")
-
 local function handlenewrobloxbody(instance)
 	local index = #meshes + 1
 	meshes[index] = robloxinstancetomesh(instance)
@@ -379,10 +384,6 @@ for index, value in next, workspace.bodies do
 end
 --now handle new parts
 workspace.bodyadded:Connect(handlenewrobloxbody)
-
-
-
-
 
 
 
@@ -473,40 +474,7 @@ local function tabrand(table)
 	return table[math.random(1, #table)]
 end
 
-love.audio.setEffect("branchequal", {
-	type             = "equalizer";
-	lowgain          = 1;
-	lowcut           = 0;
-	lowmidgain       = 1;
-	lowmidfrequency  = 0;
-	lowmidbandwidth  = 1;
-	highmidgain      = 0;
-	highmidfrequency = 0;
-	highmidbandwidth = 0;
-	highgain         = 0;
-	highcut          = 0;
-})
-
-love.audio.setEffect("branchreverb", {
-	type           = "reverb";
-	gain           = 1;
-	highgain       = 1;
-	density        = 1;
-	diffusion      = 1;
-	decaytime      = 3;
-	decayhighratio = 0;
-	earlygain      = 1;
-	earlydelay     = 2;
-	lategain       = 1;
-	latedelay      = 2;
-	roomrolloff    = 0;
-	airabsorption  = 1;
-	highlimit      = false;
-})
-
-local br = love.audio.getEffect("branchreverb")
-br.decaytime = 200;
-love.audio.setEffect("branchreverbs", br)
+love.audio.setEffect("forestreverb", acoustics.forestreverb)
 
 local branchsources = {
 	love.audio.newSource("audio/branch1.wav", "static");
@@ -522,12 +490,8 @@ local branchsources = {
 }
 
 for i, v in next, branchsources do
-	v:setEffect("branchreverb")
-	--v:setEffect("branchreverb")
+	v:setEffect("forestreverb")
 end
-
-effects = love.audio.getActiveEffects()
---print(#effects)
 
 local function playbranch()
 	local theta = 0.2*2*pi*(1/2 - math.random())
@@ -551,9 +515,6 @@ local eyeheight        = 11/2 + 6
 local mousecoefficient = 1/128
 
 
-local interval   = require("interval")
-
-
 
 
 
@@ -562,33 +523,9 @@ local interval   = require("interval")
 
 
 --reverb stuff
-love.audio.setEffect("reverb", {
-	type           = "reverb";
-	gain           = 1;
-	highgain       = 1/3;
-	density        = 1;
-	diffusion      = 1;
-	decaytime      = 3/2;
-	decayhighratio = 1;
-	earlygain      = 1;
-	earlydelay     = 0;
-	lategain       = 1;
-	latedelay      = 0;
-	roomrolloff    = 0;
-	airabsorption  = 0;
-	highlimit      = false;
-})
-
-love.audio.setEffect("echo", {
-	type     = "echo";
-	feedback = 0.1;
-	tapdelay = 0.01;
-	spread   = 0.1;
-	damping  = 2;
-})
+love.audio.setEffect("genericreverb", acoustics.genericreverb)
 
 love.audio.setDistanceModel("exponent")
-
 
 local doorcamanimtime = 0
 
@@ -601,12 +538,13 @@ local footstepsources = {
 }
 
 for i = 1, #footstepsources do
-	footstepsources[i]:setEffect("reverb")
+	footstepsources[i]:setVolume(5)
+	footstepsources[i]:setEffect("genericreverb")
 	footstepsources[i]:setPosition(0, -eyeheight, 0)
 end
 
 
-local random = require("random")
+
 
 local stepinterval = interval.new({i = 1/5*pi, v = 1/10*pi})
 stepinterval.f = function(t)
@@ -642,10 +580,19 @@ local redsource = love.audio.newSource("audio/red.mp3", "stream")
 redsource:setLooping(true)
 redsource:play()
 
-local walkspeed = 5
+
+local collider0 = collider.new({
+	position = Vector3.new(-19, 2, -19);
+	radius = 1;
+	length = Vector3.new();
+})
+
+collider0.walkspeed = 5
 love.keypressed:Connect(function(key)
-	if key == "f" then
-		walkspeed = walkspeed == 5 and 15 or 5
+	if key == "space" then
+		collider0.jump()
+	elseif key == "f" then
+		collider0.walkspeed = collider0.walkspeed == 5 and 15 or 5
 	end
 end)
 
@@ -684,7 +631,7 @@ local rustlesources = {
 }
 
 for i = 1, #rustlesources do
-	rustlesources[i]:setEffect("reverb")
+	rustlesources[i]:setEffect("genericreverb")
 end
 
 local rustlerate
@@ -719,7 +666,7 @@ function rustle.update(dt)
 		rustlecurrentsource:play()
 		rustlecurrentsource:seek(rustlefromstart)
 	end
-	rustlecurrentsource:setVolume(1/2*(1 - (1 - rustleval)^2))
+	rustlecurrentsource:setVolume(10*(1 - (1 - rustleval)^2))
 
 	rustlelastangy = angy
 	rustlelastangx = angx
@@ -731,14 +678,6 @@ end
 
 
 
-local rainsound = love.audio.newSource("audio/raininterior.mp3", "stream")
-
-rainsound:setEffect("reverb")
-rainsound:setVolume(1/16)
---rainsound:setPosition(0, 0, 2)
-rainsound:setLooping(true)
---rainsound:play()
-
 
 
 
@@ -746,19 +685,7 @@ rainsound:setLooping(true)
 
 local noise = love.math.noise
 
-local collider0 = collider.new({
-	position = Vector3.new(-19, 2, -19);
-	radius = 1;
-	length = Vector3.new();
-})
 
-love.keypressed:Connect(function(key)
-	if key == "space" then
-		collider0.jump()
-	end
-end)
-
-local flashlight = require("flashlight")
 
 local flashlight0 = flashlight.new({})
 
@@ -793,10 +720,20 @@ local function vector3tovec3(v3)
 end
 
 
+local effects = {}
 
 
+local soundhandler0 = soundhandler.new()
 
+local sound0 = soundhandler.add(soundhandler0, {
+	position = vec3.new(-9, 12, 32);
+	source   = love.audio.newSource("audio/raininterior.wav", "stream");
+	effect   = acoustics.genericreverb;
+})
+sound0.source:play()
 
+local part = Instance.new("Part")
+part.CFrame = CFrame.new(sound0.position:dump())
 
 love.update:Connect(function(dt)
 	lovlox.update(tick(), dt)
@@ -814,7 +751,7 @@ love.update:Connect(function(dt)
 	doorcamanimtime = doorcamanimtime + dt
 	local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
 	frametime = frametime + 1/5*dt*collider0.velocity.Magnitude
-	local walkanimangle, walkanimoff = camanimcf(frametime, collider0.radius, eyeheight, collider0.velocity.Magnitude/walkspeed)
+	local walkanimangle, walkanimoff = camanimcf(frametime, collider0.radius, eyeheight, collider0.velocity.Magnitude/collider0.walkspeed)
 	cameraorientation = baseorientation*mat3.fromaxisangle(walkanimangle + doorcamanim(doorcamanimtime))*mat3.fromaxisangle(vec3.new(1/32*noise(1 - 1/7*tick() - 1, 1)^5, 1/32*noise(2 - 1/7*tick() - 1, 2)^5, 1/32*noise(3 - 1/7*tick() - 1, 3)^5))
 	cameraposition = walkanimoff + vector3tovec3(collider0.position)
 	
@@ -826,7 +763,7 @@ love.update:Connect(function(dt)
 		flashlightlight.setpos(vec3.new(0, -10000, 0))
 	end
 
-	scaryvalue = lininterp(scaryvalue, walkspeed == 5 and 0 or 1, dt/2)
+	scaryvalue = lininterp(scaryvalue, collider0.walkspeed == 5 and 0 or 1, dt/2)
 	redsource:setVolume(scaryvalue)
 
 	--audio
@@ -834,12 +771,9 @@ love.update:Connect(function(dt)
 	rustle.update(dt)
 	--footstep audio
 	interval.update(stepinterval, frametime)
+	--audio engine
+	soundhandler.update(soundhandler0, cameraposition, cameraorientation)
 end)
-
-
-
-
-
 
 
 
