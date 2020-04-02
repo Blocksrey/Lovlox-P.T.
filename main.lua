@@ -256,7 +256,7 @@ local function clamp(p, a, b)
 	return p < a and a or p > b and b or p
 end
 
-love.mousemoved:Connect(function(px, py, dx, dy)
+local mousemovedcon = love.mousemoved:Connect(function(px, py, dx, dy)
 	angy = angy + sens*dx
 	angx = angx + sens*dy
 	angx = clamp(angx, -pi/2, pi/2)
@@ -615,6 +615,8 @@ end
 
 
 
+
+
 local rustle = {}
 
 local rustlesources = {
@@ -735,7 +737,7 @@ sound0.source:play()
 local part = Instance.new("Part")
 part.CFrame = CFrame.new(sound0.position:dump())
 
-love.update:Connect(function(dt)
+local updatecon = love.update:Connect(function(dt)
 	lovlox.update(tick(), dt)
 
 	love.mouse.setRelativeMode(focused and mousefocused)
@@ -799,4 +801,170 @@ love.draw:Connect(function()
 	drawmeshes(1, near, far, cameraposition, cameraorientation, meshes, lights)
 
 	lastt = t
+end)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local insert = table.insert
+
+local network    = require("network")
+local serializer = require("serializer")
+
+local function start(starttype)
+	print(starttype)	
+
+	local host = network.init(starttype)
+
+	local peers = {}
+	local positions = {}
+
+	network.onconnect(function(event)
+		print("connect:", event.peer)
+		peers[event.peer] = true
+	end)
+
+	network.ondisconnect(function(event)
+		print("disconnect:", event.peer)
+		peers[event.peer] = nil
+	end)
+
+	--[[
+	network.onreceive(function(event)
+		local data = serializer.deserialize(event.data)
+		positions[event.peer] = data
+	end)
+	]]
+
+	local numpeers = 0
+
+	---[[
+	if starttype == "client" then
+		love.update:Connect(function()
+			numpeers = 0
+			for peer, _ in next, peers do
+				numpeers = numpeers + 1
+				--peer:send(serializer.serialize(cameraposition))
+				peer:send(serializer.serialize({cameraposition:dump()}))
+				peer:send(serializer.serialize({cameraorientation:dump()}))
+			end
+		end)
+	elseif starttype == "server" then
+		mousemovedcon:Disconnect()
+		updatecon:Disconnect()
+
+		love.update:Connect(function(dt)
+			lovlox.update(tick(), dt)
+
+			love.mouse.setRelativeMode(focused and mousefocused)
+			local keyd = love.keyboard.isDown("d") and 1 or 0
+			local keya = love.keyboard.isDown("a") and 1 or 0
+			local keyw = love.keyboard.isDown("w") and 1 or 0
+			local keys = love.keyboard.isDown("s") and 1 or 0
+			local inputvector = vec3.new(keyd - keya, 0, keyw - keys):unit()
+
+			collider0.walkunit = Vector3.new((cameraorientation*inputvector):dump())
+			collider0.update()
+
+			doorcamanimtime = doorcamanimtime + dt
+			local baseorientation = mat3.fromaxisangle(vec3.new(0, angy, 0))*mat3.fromaxisangle(vec3.new(angx, 0, 0))
+			frametime = frametime + 1/5*dt*collider0.velocity.Magnitude
+			local walkanimangle, walkanimoff = camanimcf(frametime, collider0.radius, eyeheight, collider0.velocity.Magnitude/collider0.walkspeed)
+			--cameraorientation = baseorientation*mat3.fromaxisangle(walkanimangle + doorcamanim(doorcamanimtime))*mat3.fromaxisangle(vec3.new(1/32*noise(1 - 1/7*tick() - 1, 1)^5, 1/32*noise(2 - 1/7*tick() - 1, 2)^5, 1/32*noise(3 - 1/7*tick() - 1, 3)^5))
+			--cameraposition = walkanimoff + vector3tovec3(collider0.position)
+
+
+			local tardir = cameraorientation*mat3.fromaxisangle(vec3.new(1/8*noise(1/4*tick() - 1, 1)^3 + 1/24*cos(5*frametime + pi/6)^24, 1/8*noise(1/4*tick() - 2, 2)^3, 1/8*noise(1/4*tick() - 3, 3)^3))*vec3.new(0, 0, 1)
+			flashlightdirection, flashlightdirectionvelocity = springsphere(flashlightdirection, tardir, flashlightdirectionvelocity, 0.55, 12, dt)
+			if flashlight0.enabled then
+				flashlightlight.setpos(cameraposition + cameraorientation*vec3.new(1/2, -1, 3/2))
+			else
+				flashlightlight.setpos(vec3.new(0, -10000, 0))
+			end
+
+			scaryvalue = lininterp(scaryvalue, collider0.walkspeed == 5 and 0 or 1, dt/2)
+			redsource:setVolume(scaryvalue)
+
+			--audio
+			--rustle audio
+			rustle.update(dt)
+			--footstep audio
+			interval.update(stepinterval, frametime)
+			--audio engine
+			soundhandler.update(soundhandler0, cameraposition, cameraorientation)
+		end)
+
+		network.onreceive(function(event)
+			local data = serializer.deserialize(event.data)
+			if #data == 3 then
+				cameraposition = vec3.new(unpack(data))
+			else
+				cameraorientation = mat3.new(unpack(data))
+			end
+		end)
+	end
+	--]]
+
+	love.update:Connect(network.update)
+	--[[
+	love.update:Connect(function()
+		network.update()
+		
+		numpeers = 0
+		for peer, _ in next, peers do
+			numpeers = numpeers + 1
+			peer:send(serializer.serialize({love.mouse.getPosition()}))
+		end
+	end)
+	]]
+
+	--[[
+	love.draw:Connect(function()
+		for i, v in next, positions do
+			--love.graphics.rectangle("fill", v[1] - 32, v[2] - 32, 64, 64)
+		end
+		love.graphics.print(starttype)
+		love.graphics.print(numpeers, 0, 16)
+	end)
+	]]
+	
+end
+
+local fuckcon
+fuckcon = love.keypressed:Connect(function(key)
+	if key == "1" then
+		start("client")
+		fuckcon:Disconnect()
+	elseif key == "2" then
+		start("server")
+		fuckcon:Disconnect()
+	end
 end)

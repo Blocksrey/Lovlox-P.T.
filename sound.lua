@@ -1,7 +1,5 @@
 local vec3 = require("algebra/vec3")
 
---print(vec3.null*vec3.new(0, 0, 0))
-
 local sound = {}
 
 function sound.new(prop)
@@ -14,6 +12,13 @@ function sound.new(prop)
 	self.effect   = prop.effect
 
 	return self
+end
+
+function sound.delete(self)
+	self.source:stop()
+	if love.audio.getEffect(tostring(self)) then
+		love.audio.setEffect(tostring(self), false)
+	end
 end
 
 function sound.update(self, campos, camori)
