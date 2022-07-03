@@ -486,7 +486,7 @@ local branchsources = {
 	love.audio.newSource("audio/treefall1.wav", "static");
 	love.audio.newSource("audio/treefall2.wav", "static");
 	love.audio.newSource("audio/treefall3.wav", "static");
-	love.audio.newSource("audio/thinkdifferent.wav", "stream");
+--	love.audio.newSource("audio/thinkdifferent.wav", "stream");
 }
 
 for i, v in next, branchsources do
