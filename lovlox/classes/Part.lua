@@ -1,8 +1,8 @@
 local object    = require("lovlox/object")
 local workspace = require("lovlox/globals/vars/workspace")
-local vector3   = require("lovlox/types/Vector3")
-local cframe    = require("lovlox/types/CFrame")
-local color3    = require("lovlox/types/Color3")
+local vector3   = require("lovlox/type/Vector3")
+local cframe    = require("lovlox/type/CFrame")
+local color3    = require("lovlox/type/Color3")
 local Enum      = require("lovlox/globals/vars/Enum")
 
 local part = {}

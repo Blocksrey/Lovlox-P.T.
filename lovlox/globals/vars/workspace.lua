@@ -1,9 +1,9 @@
 local game     = require("lovlox/globals/vars/game")
 local object   = require("lovlox/object")
-local Instance = require("lovlox/types/Instance")
-local CFrame   = require("lovlox/types/CFrame")
-local Vector3  = require("lovlox/types/Vector3")
-local Signal   = require("lovlox/types/RBXScriptSignal")
+local Instance = require("lovlox/type/Instance")
+local CFrame   = require("lovlox/type/CFrame")
+local Vector3  = require("lovlox/type/Vector3")
+local Signal   = require("lovlox/type/RBXScriptSignal")
 
 --workspacemeta
 local workspaceprops = object.getinheritedprops()

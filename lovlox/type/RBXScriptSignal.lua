@@ -1,4 +1,4 @@
-local Connection = require("lovlox/types/RBXScriptConnection")
+local Connection = require("lovlox/type/RBXScriptConnection")
 
 local newcon = Connection.new
 local insert = table.insert

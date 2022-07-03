@@ -1,4 +1,4 @@
-local signal = require("lovlox/types/RBXScriptSignal")
+local signal = require("lovlox/type/RBXScriptSignal")
 local object = require("lovlox/object")
 
 local instance = {}

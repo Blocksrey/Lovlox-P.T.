@@ -1,5 +1,5 @@
 local game = require("lovlox/globals/vars/game")
-local Signal = require("lovlox/types/RBXScriptSignal")
+local Signal = require("lovlox/type/RBXScriptSignal")
 
 local meta = {}
 meta.__index = meta

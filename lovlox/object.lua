@@ -1,4 +1,4 @@
-local signal = require("lovlox/types/RBXScriptSignal")
+local signal = require("lovlox/type/RBXScriptSignal")
 
 local insert = table.insert
 local remove = table.remove
@@ -40,7 +40,6 @@ local function getinheritedmeta()
 	end
 
 	function meta.FindFirstAncestor()
-		
 	end
 
 	function meta.__index(self, index)
@@ -98,10 +97,10 @@ function object.new(props, meta)
 	meta  = meta  or getinheritedmeta()
 
 	local hash = {}
-	
+
 	lookup[hash] = props
 	hierarchy[hash] = {}
-	
+
 	setmetatable(hash, meta)
 
 	return hash

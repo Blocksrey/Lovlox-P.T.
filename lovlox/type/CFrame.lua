@@ -1,4 +1,4 @@
-local Vector3 = require("lovlox/types/Vector3")
+local Vector3 = require("lovlox/type/Vector3")
 
 local cos   = math.cos
 local sin   = math.sin

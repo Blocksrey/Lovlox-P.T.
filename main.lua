@@ -10,7 +10,7 @@ local pi = 3.14159265359
 local E  = 2.71828182846
 
 --make signals
-local Signal       = require("lovlox/types/RBXScriptSignal")
+local Signal       = require("lovlox/type/RBXScriptSignal")
 love.mousefocus    = Signal.new()
 love.focus         = Signal.new()
 love.keypressed    = Signal.new()
@@ -54,10 +54,10 @@ local compbuffer
 local function makebuffers()
 	local w, h = love.graphics.getDimensions()
 
-	local depths = love.graphics.newCanvas(w, h, {format = "depth24";})
-	local wverts = love.graphics.newCanvas(w, h, {format = "rgba32f";})
-	local wnorms = love.graphics.newCanvas(w, h, {format = "rgba32f";})
-	local colors = love.graphics.newCanvas(w, h, {format = "rgba32f";})
+	local depths = love.graphics.newCanvas(w, h, {format = "depth24"})
+	local wverts = love.graphics.newCanvas(w, h, {format = "rgba32f"})
+	local wnorms = love.graphics.newCanvas(w, h, {format = "rgba8"})
+	local colors = love.graphics.newCanvas(w, h, {format = "rgba8"})
 
 	depths:setFilter("nearest", "nearest")
 	wverts:setFilter("nearest", "nearest")

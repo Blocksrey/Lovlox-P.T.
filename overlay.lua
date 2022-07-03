@@ -1,5 +1,5 @@
 --contains functionality for event handling
-local Signal   = require("lovlox/types/RBXScriptSignal")
+local Signal   = require("lovlox/type/RBXScriptSignal")
 
 --main module
 local overlay = {}

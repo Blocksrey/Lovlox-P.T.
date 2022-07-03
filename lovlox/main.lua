@@ -10,12 +10,12 @@ require("lovlox/enums/SurfaceType")
 game      = require("lovlox/globals/vars/game")
 workspace = require("lovlox/globals/vars/workspace")
 --types
-CFrame    = require("lovlox/types/CFrame")
-Color3    = require("lovlox/types/Color3")
-Instance  = require("lovlox/types/Instance")
-Ray       = require("lovlox/types/Ray")
-Region3   = require("lovlox/types/Region3")
-Vector3   = require("lovlox/types/Vector3")
+CFrame    = require("lovlox/type/CFrame")
+Color3    = require("lovlox/type/Color3")
+Instance  = require("lovlox/type/Instance")
+Ray       = require("lovlox/type/Ray")
+Region3   = require("lovlox/type/Region3")
+Vector3   = require("lovlox/type/Vector3")
 
 --classes
 require("lovlox/classes/ReplicatedFirst")
